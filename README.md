@@ -7,4 +7,4 @@ I first needed to clock in to the company time managed sheet, to the Call system
 Knowing myself, I know I would miss some of these signs in so I came up with the idea to create one tool I would just need to sign in from that tool, and I would sign myself in any other places I needed to be in, and when signed out.
 
 I decided to use Python to develop he tool; however, with the Python script, I am using AutoHotkey64.exe to interact with the computer keyboard and screen.
-I am not familiar with the AutoHotkey64.exe script. Please learn how it works before using the script from this code.
+If you are not familiar with the AutoHotkey64.exe script. Please learn how it works before using the script from this code.
