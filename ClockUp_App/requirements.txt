@@ -70,3 +70,11 @@ whatthepatch==1.0.7
 wsproto==1.2.0
 yapf==0.43.0
 zipp==3.23.0
+ahk==1.8.4
+ahk-binary==2023.9.0
+google-auth==2.41.1
+google-auth-oauthlib==1.2.3
+gspread==6.2.1
+h11==0.16.0
+psutil==7.2.1
+
