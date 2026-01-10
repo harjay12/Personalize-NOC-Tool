@@ -12,7 +12,6 @@ import json
 import psutil
 import ahkFunc
 import gspread
-import platform
 import datetime
 import subprocess
 import gspreadKey
@@ -273,42 +272,11 @@ def kill_process(old_pid):
             print(f"Could not kill process {proc}: {e}")
 
 
-def ping_host(ip_list=None, nunICMP=None):
-    # ip_list = ['8.8.8.8', '1.1.1.1', '192.168.1.1']  # Example IP list
 
-    for ip in ip_list:
-        if platform.system() == "Windows":
-            # For Windows, use 'start cmd /k' to open a new command prompt
-            # and keep it open after the command finishes.
-            if nunICMP == "t":
-                command = f"start cmd /k ping -t {ip}"
-            elif nunICMP is not None:
-                command = f"start cmd /k ping -n {nunICMP} {ip}"
-            else:
-                command = f"start cmd /k ping {ip}"
-            # Run "cmd.exe /k ping "
-            # ahkExe_Path().run_script(f'Runwait "cmd.exe /k ping {ip}"')
-        else:
-            command = f'xterm -e "ping {ip}" &'
-
-            # command = f'start cmd /k ping -n {nunICMP} {ip}'
-            # For Linux/macOS, use a terminal emulator command like 'xterm -e' or 'gnome-terminal -e'
-            # The specific command might vary based on the system's default terminal.
-            # This example uses 'xterm'.
-            # '&' runs the command in the background
-
-        try:
-            subprocess.Popen(command, shell=True)
-            print(f"Opened new window to ping: {ip}")
-        except Exception as e:
-            print(f"Error opening window for {ip}: {e}")
-
-
-def GoogleSheetIn(inClock=None, shStatus=None, workingStat=None):
+def GoogleSheetIn(inClock=None, shStatus=None):
 
     # gc = gspread.service_account(filename=r'c:\Users\harja\OneDrive\Desktop\Python_With_Venv\ClockUp_App\gspread.json')
-    # try:
-    # myloc = geocoder.ip("me")
+
     inOut_office = "Office"
     pcUser = re.findall(
         r"jsaintaime?",
@@ -360,15 +328,13 @@ def GoogleSheetIn(inClock=None, shStatus=None, workingStat=None):
 
     if os.path.exists(file_path):
         os.remove(file_path)
-    # except BaseException as err:
-    #     if os.path.exists(file_path):
-    #         os.remove(file_path)
-    #     print(err)
 
 
-# import subprocess
-
-
+"""
+Google AI Genarated code to determine is current computer is remote in.
+This code is being use to work with function to update  NOC google spread sheet.
+If is_remotely_used_windows is true I am showing as remot from NOC google spread sheet
+"""
 def is_remotely_used_windows():
     # Run the 'query user' command
     result = subprocess.run(["query", "user"], capture_output=True, text=True)
