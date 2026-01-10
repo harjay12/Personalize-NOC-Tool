@@ -53,47 +53,7 @@ def cca_Path():
     )
 
 
-conductors = {
-    "Select a conductor": "",
-    "Conductor 1": "https://157.96.244.20/",
-    "Conductor 2": "https://157.96.244.70/",
-    "Conductor 3": "https://157.96.244.30/",
-    "Conductor 4": "https://157.96.244.40/",
-    "Conductor 5": "https://157.96.244.41/",
-    "Conductor 6": "https://157.96.244.42/",
-    "Conductor 7": "https://157.96.244.43/",
-    "Conductor 8": "https://157.96.244.44/",
-    "Conductor 9": "https://157.96.244.45/",
-    "Conductor 10": "https://157.96.244.46/",
-    "Applegreen": "https://157.96.244.58/",
-}
 
-CarrierPH = {
-    "spectrum": "844-350-5679",
-    "suddenLink1": "888-822-5151",
-    "suddenLink2": "800-490-9604",
-    "at&t (opt 2)": "8007323960",
-    "cablevision/optimum": "866-575-8000",
-    "comcast": "877-881-6544",
-    "comcast national": "866-511-6489",
-    "cox (opt 4)": "877-225-0005",
-    "hargray sparklight1": "8437061850",
-    "hargray sparklight2": "877-427-4729",
-    "mediacom": "800-379-7412",
-    "shentel": "800-743-6835",
-    "cableone/sparklight": "877-570-0500",
-    "wave": "800-246-2455",
-    "bright speed": "8333632907",
-    "bright speed t1/pri": "8333632888",
-    "bright speed": "833-692-7773",
-    "verizon dsac (opt2)": "866-844-3592",
-    "gvtc noc": "8554882662",
-    "vyve": "8553678983",
-    "centurylink": "800-201-4099",
-    "midcontinental (midco)": "800-888-1300",
-    "windstream": "800-347-1991",
-    "ziply": "866-947-5995",
-}
 
 UserName = ""
 PassWord = ""
@@ -479,3 +439,4 @@ if __name__ == "__main__":
 # print(os.getlogin())
 # CCA_LoggOns()
 # NocStatud()
+
