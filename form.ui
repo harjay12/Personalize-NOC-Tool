@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>517</width>
+    <height>445</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QStackedWidget" name="stackedWidget">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>-10</y>
+      <width>521</width>
+      <height>461</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="page">
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>80</y>
+        <width>85</width>
+        <height>298</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="leftMargin">
+        <number>5</number>
+       </property>
+       <property name="topMargin">
+        <number>5</number>
+       </property>
+       <property name="rightMargin">
+        <number>5</number>
+       </property>
+       <property name="bottomMargin">
+        <number>5</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="Off_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(16, 255, 136);</string>
+         </property>
+         <property name="text">
+          <string>OFF</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="In_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(16, 255, 136);</string>
+         </property>
+         <property name="text">
+          <string>IN</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Break_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 53, 35);</string>
+         </property>
+         <property name="text">
+          <string>BREAK</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Lunch_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 170, 0);</string>
+         </property>
+         <property name="text">
+          <string>LUNCH</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="IW_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 170, 127);</string>
+         </property>
+         <property name="text">
+          <string>IW/NI</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Training_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(0, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>Training</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="InterEscal_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(0, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>Inter Escala</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="CCABlock_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(0, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>CCA Block</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="Out_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(195, 0, 0);</string>
+         </property>
+         <property name="text">
+          <string>OUT</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="CCA_pushButton">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 255, 127);</string>
+         </property>
+         <property name="text">
+          <string>CCA</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QCheckBox" name="checkBox">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>162</y>
+        <width>21</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>279</y>
+        <width>141</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="ClockInpushButton">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>220</y>
+        <width>341</width>
+        <height>35</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Submit</string>
+      </property>
+     </widget>
+     <widget class="QDateTimeEdit" name="dateTimeEdit">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>30</y>
+        <width>161</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+      </property>
+      <property name="timeSpec">
+       <enum>Qt::TimeSpec::LocalTime</enum>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="PassWtextEdit">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>120</y>
+        <width>300</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="inputMethodHints">
+       <set>Qt::InputMethodHint::ImhNone</set>
+      </property>
+      <property name="dragEnabled">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="UserNmtextEdit">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>80</y>
+        <width>300</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="PassWlabel">
+      <property name="geometry">
+       <rect>
+        <x>23</x>
+        <y>120</y>
+        <width>50</width>
+        <height>27</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Password</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="UserNmlabel">
+      <property name="geometry">
+       <rect>
+        <x>23</x>
+        <y>80</y>
+        <width>58</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>User Name</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="CodelineEdit">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>160</y>
+        <width>230</width>
+        <height>30</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="Code_Label">
+      <property name="geometry">
+       <rect>
+        <x>23</x>
+        <y>160</y>
+        <width>57</width>
+        <height>28</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Auth Code</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="CCABBRcomboBox">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>279</y>
+        <width>160</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="IPPings">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>328</y>
+        <width>351</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>IP Pings</string>
+      </property>
+      <widget class="QComboBox" name="Subnet_Box">
+       <property name="geometry">
+        <rect>
+         <x>15</x>
+         <y>20</y>
+         <width>158</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Choose the &lt;/span&gt;&lt;span style=&quot; font-family:'Arial','Helvetica','sans-serif'; font-size:10pt; font-weight:700; color:#222222;&quot;&gt;Subnet Mask&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="GWIPlineEdit">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>20</y>
+         <width>141</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use The &lt;span style=&quot; font-weight:700;&quot;&gt;Gateway IP&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="NipComboBox">
+       <property name="geometry">
+        <rect>
+         <x>30</x>
+         <y>50</y>
+         <width>80</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="PingButton">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>50</y>
+         <width>111</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Send Ping</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QPushButton" name="CloseTab">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>410</y>
+        <width>70</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(179, 110, 141);</string>
+      </property>
+      <property name="text">
+       <string>Close Tab</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>410</y>
+        <width>70</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>8</pointsize>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(133, 98, 168);</string>
+      </property>
+      <property name="text">
+       <string>End Ping</string>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="NSOID">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>310</y>
+        <width>160</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_2"/>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
