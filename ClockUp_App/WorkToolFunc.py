@@ -38,12 +38,14 @@ load_dotenv(dotenv_path)
 # data_path = os.path.abspath(os.path.join(bundle_dir, 'AutoHotkeyV2.exe'))
 # print(data_path)
 
+
 # Check for AutoHotkey64
 def ahkExe_Path():
     if os.path.exists(r"c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"):
         return AHK(executable_path=r"c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe")
     else:
         return "Not Found!"
+
 
 # Check for CCA App
 def cca_Path():
@@ -126,11 +128,9 @@ def ClockingIn():
                 By.XPATH,
                 "/html/body/div[1]/ui-view/krn-timestamp/krn-result-message/div/div/div[2]",
             ).text
-
-            CCA_LoggOns(inRes)
-            time.sleep(1)
-
             GoogleSheetIn(inClock=inRes)
+            time.sleep(1)
+            CCA_LoggOns(logStatus=inRes)
 
             driverIn.switch_to.default_content()
             time.sleep(2)
@@ -205,6 +205,8 @@ def custmInputBox_Func(bxInput=None, inputTitle=None):
 
 
 def CCA_LoggOns(logStatus=None):
+    if logStatus == "The return from break punch was accepted.":
+        return
 
     bxInput = {
         "CCA_USERNAME": "Enter your Granite Email ID",
@@ -240,7 +242,7 @@ def CCA_LoggOns(logStatus=None):
                                 win.send("{Enter}")
 
                 else:
-                    ahkExe_Path().run_script(f"Run '{cca_Path()}'")
+                    ahkExe_Path().run_script(f"Run {cca_Path()}")
                     time.sleep(1)
                     win = ahkExe_Path().active_window
                     if win or logStatus == "The in punch was accepted.":
@@ -270,7 +272,6 @@ def kill_process(old_pid):
                 print(f"Killed process: PID: {proc}")
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
             print(f"Could not kill process {proc}: {e}")
-
 
 
 def GoogleSheetIn(inClock=None, shStatus=None):
@@ -303,6 +304,8 @@ def GoogleSheetIn(inClock=None, shStatus=None):
     r = cell.row
     l = cell.col + 1
     l2 = cell.col + 2
+    print(sh.acell("P7").value)
+
     thurs_day = datetime.date.today().strftime("%A")
 
     if shStatus is not None:
@@ -335,6 +338,8 @@ Google AI Genarated code to determine is current computer is remote in.
 This code is being use to work with function to update  NOC google spread sheet.
 If is_remotely_used_windows is true I am showing as remot from NOC google spread sheet
 """
+
+
 def is_remotely_used_windows():
     # Run the 'query user' command
     result = subprocess.run(["query", "user"], capture_output=True, text=True)
@@ -366,7 +371,7 @@ if __name__ == "__main__":
     # kill_process()
     # ClockingIn()
     # Example Usage
-    GoogleSheetIn(inClock="The in punch was accepted.")
+    GoogleSheetIn()
     if is_remotely_used_windows():
         print("The Windows computer might be used remotely.")
     else:
