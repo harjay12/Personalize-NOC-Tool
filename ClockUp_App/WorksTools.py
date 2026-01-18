@@ -336,10 +336,12 @@ class MainWindow(QMainWindow):
             else:
                 neighborsIp = GWIP.replace(ipLaststr, str(int(ipLaststr) + i))
 
-            I needed to rework my approch o update he last IP octet. this time I shifted my focus on the last dot of he sr.
-            At First I was converting tthe str to arr with the split func and was spliting with '.'
-            Then get the last indes of the arr to get Usabe IPs and proceeded with replacing from orignal str.
-            but with replace func it replaced al matches. But now I am ony replacing the last octet with usabe IP
+            I needed to rework my approch to update the last IP octet to ping usabe IPs. This time I shifted my focus on the last dot from the IP input str.
+            At First I was converting the str to arr with the split built-in func and was spliting with '.'
+            Then get the last arr index to get Usabe IPs and proceeded with replacing last arr index with coverted last index.
+            But with replace func it replaced all possible matches. But now I am ony replacing the last octet with usabe IP.
+
+            The if statement worked but i was not to happy about it.
             
             """
 
@@ -352,8 +354,6 @@ class MainWindow(QMainWindow):
             for i in range(0, ipBloks[currentBlk]):
 
                 neighborsIp = f"{GWIP[:ipLstDt+1]}{str(int(ipLstOctet) + i)}"
-
-                print(neighborsIp)
 
                 usableIP.append(neighborsIp)
                 self.process = QProcess()
