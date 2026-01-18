@@ -371,7 +371,7 @@ if __name__ == "__main__":
     # kill_process()
     # ClockingIn()
     # Example Usage
-    GoogleSheetIn()
+    GoogleSheetIn("", "")
     if is_remotely_used_windows():
         print("The Windows computer might be used remotely.")
     else:

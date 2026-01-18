@@ -311,8 +311,10 @@ class MainWindow(QMainWindow):
                     self.ui.stackedWidget.removeWidget(widget)
                     widget.deleteLater()  # Schedule for deletion
 
-            GWIP = self.ui.GWIPlineEdit.text()
-            if not ipaddress.ip_address(GWIP):
+            GWIP = self.ui.GWIPlineEdit.text().replace(" ", "")
+
+            is_ValidIP = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*", GWIP)
+            if not is_ValidIP:
                 self.msg_box.setText(
                     "The Gateway IP Address is not valid.\t"
                     "\nVerified you have entered a valid gateway IP address."
@@ -325,13 +327,33 @@ class MainWindow(QMainWindow):
 
                 return
 
+            """ 
             ipLaststr = GWIP.split(".")[-1]
+            neighborsIp = GWIP.replace(ipLaststr, str(int(ipLaststr) + i))
+
+            if len(ipLaststr) == 1:
+                neighborsIp = f"{GWIP[:-1]}{str(int(ipLaststr) + i)}"
+            else:
+                neighborsIp = GWIP.replace(ipLaststr, str(int(ipLaststr) + i))
+
+            I needed to rework my approch o update he last IP octet. this time I shifted my focus on the last dot of he sr.
+            At First I was converting tthe str to arr with the split func and was spliting with '.'
+            Then get the last indes of the arr to get Usabe IPs and proceeded with replacing from orignal str.
+            but with replace func it replaced al matches. But now I am ony replacing the last octet with usabe IP
+            
+            """
+
+            # Find the last Dot in reverse built-in rfind python func.
+            ipLstDt = GWIP.rfind(".")
+            # Collect the last octet value excluding the dot.
+            ipLstOctet = GWIP[ipLstDt + 1 : len(GWIP)]
             currentBlk = self.ui.Subnet_Box.currentText()
 
             for i in range(0, ipBloks[currentBlk]):
-                # neighborsIp = f"{GWIP[:-1]}{str(int(ipLaststr) + i)}"
-                neighborsIp = GWIP.replace(GWIP.split(".")[-1], str(int(ipLaststr) + i))
-                # print(neighborsIp)
+
+                neighborsIp = f"{GWIP[:ipLstDt+1]}{str(int(ipLstOctet) + i)}"
+
+                print(neighborsIp)
 
                 usableIP.append(neighborsIp)
                 self.process = QProcess()
@@ -773,12 +795,14 @@ class CliWidget(QWidget):
         # Windows example line: "Reply from 142.250.186.78: bytes=32 time=25ms TTL=117"
         # Linux example line: "64 bytes from 142.250.186.78: icmp_seq=1 ttl=117 time=25.1 ms"
         match = re.search(r"time=(\d+)\s*ms", output)
-        match2 = re.search(r"timed\s*out.|unreachable.", output)
+        match1 = re.search(r"time<1ms", output)
+        match2 = re.search(r"timed\s*out.|unreachable.|General failure.", output)
 
         try:
             if match:
                 self.ping_times.append(float(match.group(1)))
-
+            elif match1:
+                self.ping_times.append(0)
             elif match2:
                 self.timesOut.append(str(match2))
         except ValueError:
