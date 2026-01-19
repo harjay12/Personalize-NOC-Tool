@@ -20,8 +20,8 @@ from dotenv import *
 from glob import glob
 from PySide6.QtCore import *
 from selenium import webdriver
+from PySide6.QtCore import QProcess
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
@@ -300,11 +300,10 @@ def GoogleSheetIn(inClock=None, shStatus=None):
     wb = gc.open_by_key("1fWXYlfnNS71ZPsNqXZ5ZVjSCjASnvgcHKC5idWD3cOA")
     sh = wb.get_worksheet_by_id(101455945)
     cell = sh.find(f"{os.getenv('NOCGSH')}")
-    # print('from here',os.getenv('NOCGSH'))
+
     r = cell.row
     l = cell.col + 1
     l2 = cell.col + 2
-    print(sh.acell("P7").value)
 
     thurs_day = datetime.date.today().strftime("%A")
 
@@ -333,23 +332,23 @@ def GoogleSheetIn(inClock=None, shStatus=None):
         os.remove(file_path)
 
 
-"""
-Google AI Genarated code to determine is current computer is remote in.
-This code is being use to work with function to update  NOC google spread sheet.
-If is_remotely_used_windows is true I am showing as remot from NOC google spread sheet
-"""
-
-
 def is_remotely_used_windows():
-    # Run the 'query user' command
-    result = subprocess.run(["query", "user"], capture_output=True, text=True)
-    output = result.stdout
+    """
+    Google AI Genarated code to determine is current computer is remote in.
+    This code is being use to work with function to update  NOC google spread sheet.
+    If is_remotely_used_windows is true I am showing as remot from NOC google spread sheet
+    """
 
-    # Parse the output
-    # The output format is generally: USERNAME SESSIONNAME ID STATE IDLETIME LOGONTIME
-    # A local session has SESSIONNAME as 'console'
+    process = QProcess()
+    # Start the 'query user' command on Windows
+    process.start("cmd.exe", ["/C", "query user"])
+    process.waitForFinished()  # Wait for the command to complete
+
+    # Read the output
+    output = process.readAllStandardOutput().data().decode("utf-8", errors="ignore")
 
     for line in output.splitlines():
+
         if "console" in line and "Active" in line:
             # If the active session is the console session, it might be local use or a remote session connected to the console.
             # A more definitive check is for sessions without 'console' but with an IP address or 'rdp-tcp' in the session name/origin.
@@ -365,46 +364,11 @@ def is_remotely_used_windows():
 
 
 if __name__ == "__main__":
-    # CCA_LoggOns()
 
     print(datetime.date.today().strftime("%A").lower())
-    # kill_process()
-    # ClockingIn()
-    # Example Usage
+
     GoogleSheetIn("", "")
     if is_remotely_used_windows():
         print("The Windows computer might be used remotely.")
     else:
         print("The Windows computer appears to be used locally.")
-
-
-# You can also use pre-written AHK files more easily
-# result_from_file = ahk.run_script_stdout(script_path="my_script.ahk")
-
-# ahk = AHK()
-# script_path = os.path.abspath(rf'c:\Users\{os.environ["username"]}\Documents\inputGui.ahk')
-
-# # Run the AHK script and capture the integer return value (exit code)
-# # The return_value parameter is for this purpose
-# # return_code = ahk.run_script(script_path, blocking=True, return_value=True)
-# return_code=ahkExe_Path().run_script(f'{script_path}',blocking=True,)
-
-# print(f"The value from AHK is: {return_code}")
-
-# print(rf'c:\Users\{os.environ["username"]}\Documents')
-# GoogleSheetIn(inClock='',shStatus='')
-# print(dotenv_path)
-
-# dotEnv_File("XYZ")
-# ping_host()
-# ip_list = ['8.8.8.8', '1.1.1.1', '192.168.1.1']
-# ping_host(ip_list, 3)
-# Example usage
-
-# Example usage:
-
-# getMonitorDimensions()
-# CCA_LoggOns()
-# print(os.getlogin())
-# CCA_LoggOns()
-# NocStatud()

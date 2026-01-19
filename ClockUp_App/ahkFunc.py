@@ -108,25 +108,25 @@ def CCA_LogSentIn():
                 if (A_Clipboard == "") {{
                     send  "{os.getenv('CCA_USERNAME')}"
                 }}
-                    send "{{tab}}"
-                    Sleep 500
-                    send "{os.getenv('CCA_PASSW')}"
-                    send "{{tab 2}}"
-                    Sleep 500
-                    send "^c"
-                    ClipWait
-                    Sleep 500
-                    if (A_Clipboard == "") {{
-                        send "{os.getenv('CCA_PHONE')}"
-                    }}
-                    send "{{tab}}"
-                    send "{{Enter}}"
-                    Sleep 500
-                    WinActive("My Contact Center Agent - Not Ready")
-                    Sleep 300
-                    if  A_ScreenWidth >= 1920 && MonitorGetCount() > 1{{
-                        WinMove 3420,  820, 425, 210, "A"  
-                    }}
+                send "{{tab}}"
+                Sleep 500
+                send "{os.getenv('CCA_PASSW')}"
+                send "{{tab 2}}"
+                Sleep 500
+                send "^c"
+                ClipWait
+                Sleep 500
+                if (A_Clipboard == "") {{
+                    send "{os.getenv('CCA_PHONE')}"
+                }}
+                send "{{tab}}"
+                send "{{Enter}}"
+                Sleep 500
+                WinActive("My Contact Center Agent - Not Ready")
+                Sleep 300
+                if  A_ScreenWidth >= 1920 && MonitorGetCount() > 1{{
+                    WinMove 3420,  820, 425, 210, "A"  
+                }}
             }}
 
 
