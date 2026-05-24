@@ -409,7 +409,8 @@ def is_remotely_used_windows():
 def driver_init():
 # 1. Setup Chrome options
     try: 
-        bxInput = {"ED_LINK": "Enter your Granite ED Link", }
+        bxInput = {"ED_LINK": "Enter your Granite ED Link",
+                   "ED_PORT": "Enter your Portt to listen to:", }
         custmInputBox_Func(bxInput, "Adding Granite ED Link.")
 
         chrome_options = Options()
