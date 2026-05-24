@@ -1079,6 +1079,10 @@ class FlexEdgeookUp(QWidget):
     def edNSOI_executeTrhead(self):
       
         if self.edComboBox.currentIndex() == 0:
+            # self.text_outputF.clear()
+            self.text_outputF.append(f'{self.startScreen}')
+            self.text_outputF.append(f'{self.nsoidFormat}\n')
+
             self.text_outputF.append(
                 WorkToolFunc.edConfig_Srch(self.nsoidFormat
             ))
@@ -1086,6 +1090,9 @@ class FlexEdgeookUp(QWidget):
      
                 
         elif self.edComboBox.currentIndex() == 1:
+            # self.text_outputF.clear()
+            self.text_outputF.append(f'{self.startScreen1}')
+            self.text_outputF.append(f'{self.nsoidFormat}\n')
 
             search2 = WorkToolFunc.stdrdNSO_srchFormatter(
                                 WorkToolFunc.NSOLook(self.nsoidFormat))
@@ -1098,9 +1105,7 @@ class FlexEdgeookUp(QWidget):
     def edNSOIDLookUp(self):
         self.text_outputF.clear()
 
-        self.text_outputF.append(f'{self.startScreen}')
         self.nsoidFormat = self.command_input.text().upper()
-        self.text_outputF.append(f'{self.nsoidFormat}\n')
 
         self.CPEGRTchecker = re.search( r'(^CPEGRT0{5,}\d{5}$)',self.nsoidFormat, flags=re.IGNORECASE) 
         self.NSODIchecker =  re.search( r'(^NSODIA0{5,}\d{5}$)',self.nsoidFormat, flags=re.IGNORECASE)
@@ -1108,13 +1113,13 @@ class FlexEdgeookUp(QWidget):
         self.command_input.clear()
 
         if not self.CPEGRTchecker and self.edComboBox.currentIndex() == 0:
-
+            self.text_outputF.append(f'{self.startScreen}')
+            self.text_outputF.append(f'{self.nsoidFormat}\n')
 
             self.text_outputF.append(f'Error: NSOID entered is invalid; format '
                     'CPEGRT00000xxxxx\n\nEnter NSOID to find:')
             return
         elif not (self.CPEGRTchecker or self.NSODIchecker or self.CPEVYSTchecker):
-            self.text_outputF.clear()
             self.text_outputF.append(f'{self.startScreen1}')
             self.text_outputF.append(f'{self.nsoidFormat}\n')
 

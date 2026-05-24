@@ -410,7 +410,7 @@ def driver_init():
 # 1. Setup Chrome options
     try: 
         bxInput = {"ED_LINK": "Enter your Granite ED Link",
-                   "ED_PORT": "Enter your Portt to listen to:", }
+                   "ED_PORT": "Enter your Port to listen to:", }
         custmInputBox_Func(bxInput, "Adding Granite ED Link.")
 
         chrome_options = Options()
@@ -549,7 +549,7 @@ def edConfig_Srch(nsoidInput=None):
             EC.presence_of_element_located((By.XPATH,'//*[@id="output"]/div[2]/div'))).text
             
     except BaseException as err:
-        return 'Something went wrong!'
+        return 'ERROR: Something went wrong!'
       
 
 
@@ -597,7 +597,7 @@ def NSOLook(nsoidInput=None):
                             EC.presence_of_element_located((By.XPATH,'/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/div[2]'))).text
     
     except BaseException as err:
-        return "Something went wrong!"
+        return "ERROR: Something went wrong!\nPossibly this is an OffNet Circuit check the WAN IP."
 
     
 def oktaCheck(driver,nsoidInput=None):
@@ -619,22 +619,6 @@ def oktaCheck(driver,nsoidInput=None):
     except NoSuchElementException:
         return False
     
-
-def gLink_specPort():
-
-    port = 9561
-    user_data_dir = rf'C:\Users\{os.environ["username"]}\AppData\Local\Google\Chrome\User Data\Default' 
-    chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-
-    # Launch Chrome with specific flags
-    subprocess.Popen([
-        chrome_path,
-        f"--remote-debugging-port={port}",
-        f"--user-data-dir={user_data_dir}",
-        'https://ed.grteng.com/login',
-    
-    ])
-
 
 def closeSel():
     if len(seleCloser) != 0:
@@ -662,6 +646,7 @@ def nsoTableFormat(dict_listVal=None):
     res = ''
     for key, val in dict_listVal.items():
         res =   res +"\n" +  f"\n{key:<10}\n"
+        res = res +  ("-" * 60) 
         for row in val:
             res = res +  (f"\n\t{row[0]:<20} \t{row[1]:<10}")
     return res
@@ -671,10 +656,14 @@ def stdrdNSO_srchFormatter(nsoStr=None):
     tempArr = []
     formatToDicy ={}
 
+    if 'ERROR: ' in nsoStr:
+        return nsoStr
+    
     nsoStr  =  nsoStr.strip().split('\n')
     for header in nsoStr:
         if 'Details' in header:
             tempArr.append(header)
+        
 
     for cnt in range(0, len(tempArr)-1):
  
@@ -686,13 +675,14 @@ def stdrdNSO_srchFormatter(nsoStr=None):
             formatToDicy.update({tempArr[cnt]: pairs})
             if end == nsoStr.index(tempArr[len(tempArr)-1]):
                 pairs = [nsoStr[end+1:][i:i+2] for i in range(0, len(nsoStr[end+1]), 2)]
-
                 formatToDicy.update({tempArr[len(tempArr)-1]: pairs})
+
     dictTable_Res = nsoTableFormat(formatToDicy)
     return dictTable_Res
 
 
 if __name__ == "__main__":
+ 
     print(datetime.date.today().strftime("%A").lower())
     GoogleSheetIn()
     if is_remotely_used_windows():
