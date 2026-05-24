@@ -56,20 +56,12 @@ promptPath ={
 logPrompt = {}
 pathVa = [0]*10
 
-
-# bundle_dir = getattr(
-#     sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
-# data_path = os.path.abspath(os.path.join(bundle_dir, 'AutoHotkeyV2.exe'))
-# print(data_path)
-
-
 # Check for AutoHotkey64
 def ahkExe_Path():
     if os.path.exists(r"c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"):
         return AHK(executable_path=r"c:\Program Files\AutoHotkey\v2\AutoHotkey64.exe")
     else:
         return "Not Found!"
-
 
 # Check for CCA App
 def cca_Path():
@@ -87,8 +79,6 @@ ADP_Time = "https://online.adp.com/signin/v1/?APPID=EeT&productId=80e309c3-7096-
 
 
 def seleniumDiverInit():
-    # chrome_options = Options()
-    # chrome_options.add_experimental_option("debuggerAddress", "localhost:9222")
     return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
 
 
@@ -323,10 +313,8 @@ def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
             gspreadKey.credsFile_Gspread(file_path=file_path)
 
     gc = gspread.oauth(credentials_filename=file_path)
-    # gc = gspread.oauth()
+ 
     wb = gc.open_by_key("1fWXYlfnNS71ZPsNqXZ5ZVjSCjASnvgcHKC5idWD3cOA")
-    # spreadsheet = gc.open("NOC Department Status Document")
-    # sh = wb.get_worksheet_by_id(101455945)
 
     worksheet = wb.worksheet("Rep Punch Tab")
     if shCol:
@@ -342,25 +330,18 @@ def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
     l = cell.col + 1
     l2 = cell.col + 2
 
-    # thurs_day = datetime.date.today().strftime("%A")
-
     if shStatus is not None:
         worksheet.update_cell(r, l2, f"{shStatus}")
 
     if inClock == "The in punch was accepted.":
         worksheet.update_cell(r, l, inOut_office)
         worksheet.update_cell(r, l2, "In")
-        # if thurs_day.lower() == "wednesday" and pcUser:
-        #     worksheet.update_cell(r, l2, "CCA Call Block")
 
     elif inClock == "The out for break punch was accepted.":
         worksheet.update_cell(r, l2, "Lunch")
 
     elif inClock == "The return from break punch was accepted.":
         worksheet.update_cell(r, l2, "In")
-
-        # if thurs_day.lower() == "wednesday" and pcUser:
-        #     worksheet.update_cell(r, l2, "CCA Call Block")
 
     elif inClock == "The out punch was accepted.":
         worksheet.update_cell(r, l, "")
@@ -441,7 +422,6 @@ def driver_init():
 
 def portListner(port):
     try:
-        # time.sleep(3)
         cmd = f'netstat -ano | findstr ":{port}"' # Windows version
         output = subprocess.check_output(cmd, shell=True).decode()
         return(f"LISTENING" in output or f"ESTABLISHED" in output)
@@ -542,9 +522,6 @@ def edConfig_Srch(nsoidInput=None):
 
         oktaCheck(driver,InputTup)
 
-        # print( WebDriverWait(driver, 30).until(
-        #        EC.presence_of_element_located((By.XPATH,'//*[@id="output"]/div[2]/div'))).text)
-    
         return WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH,'//*[@id="output"]/div[2]/div'))).text
             
@@ -590,9 +567,7 @@ def NSOLook(nsoidInput=None):
         driver.find_element(By.XPATH,f"{promptPath['stdSrchBtn']}").click()
 
         oktaCheck(driver,InputTup)
-        
-        # print(WebDriverWait(driver, 30).until(
-        #                 EC.presence_of_element_located((By.XPATH,'/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/div[2]'))).text)
+       
         return WebDriverWait(driver, 30).until(
                             EC.presence_of_element_located((By.XPATH,'/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/div[2]'))).text
     

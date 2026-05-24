@@ -19,7 +19,6 @@ import subprocess
 import traceback
 import googlemaps
 import WorkToolFunc
-from PySide6.QtWebEngineWidgets import *
 from dotenv import *
 import secretCompdetails
 from PySide6.QtGui import *
@@ -74,19 +73,17 @@ class WorkerSignals(QObject):
 
 class Worker_QRunnable(QRunnable):
 
-    def __init__(self, func, *args, **kwargs):
+    def __init__(self, func, *args):
         super().__init__()
         self.func = func
         self.args = args
-        self.kwargs = kwargs
         self.signals = WorkerSignals()
-        # self.kwargs['progressCnt'] = self.signals.bar_Progress
 
     @Slot()
     def run(self):
         print("MyRunnable is running...")
         try:
-            result = self.func(*self.args, **self.kwargs)  # Simulate some work
+            result = self.func(*self.args)  # Simulate some work
 
         except Exception:
             traceback.print_exc()
@@ -190,9 +187,7 @@ class MainWindow(QMainWindow):
             self.ui.endAllPing_pushBtn.setVisible(False)
             self.ui.NSOID.setVisible(False)
 
-         
             self.threadpool = QThreadPool().globalInstance()
-            
 
         except KeyboardInterrupt:
             pass
@@ -323,9 +318,6 @@ class MainWindow(QMainWindow):
 
         self.ui.endPing_pushBtn.setVisible(False)
         self.ui.endAllPing_pushBtn.setVisible(False)
-     
-
-        # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     # --------------------------------------- Change page---------------------------------------------
 
@@ -416,8 +408,6 @@ class MainWindow(QMainWindow):
 
             is_ValidIP = re.search(
                 r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*|(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]", GWIP)
-
-            # is_ValidIP = re.search(r"(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]", GWIP)
 
             if not is_ValidIP:
                 self.msg_box.setText(
@@ -718,19 +708,6 @@ class MainWindow(QMainWindow):
 
             self.DropDwnStyle()
 
-            # self.ui.gspreadComboBox.setItemData(1,QColor( Qt.red ), Qt.BackgroundRole)
-
-            # for btnKey, btnVal in btnList.items():
-            #     if sender_button.objectName() == btnKey:
-            #         self.With_worker = Worker_QRunnable(self.GS_executeTrhead, btnVal)
-            #         self.threadpool.start(self.With_worker)
-
-            # if sender_button.objectName() == "Lunch_pushButton":
-            #     self.With_worker = Worker_QRunnable(
-            #         self.CCA_executeTrhead, sender_button.objectName(), pidCheck
-            #     )
-            #     self.threadpool.start(self.With_worker)
-
         except BaseException as e:
 
             if "object has no attribute 'row'" in str(e):
@@ -915,10 +892,7 @@ class CliWidget(QWidget):
 
     @Slot()
     def read_output(self):
-        # data = self.process.readAllStandardOutput().data().decode('utf-8').strip()
-        # if data:
-        #     self.text_output.append(data)
-        #     self.parse_ping_times(data)
+
         while self.process.canReadLine():
             line = self.process.readLine().data().decode('utf-8').strip()
             self.text_output.append(line)
@@ -1237,9 +1211,6 @@ class Create_IW(QWidget):
     def timeZone(self,PostalCode):
    
         Canadapattern = r"^[A-Z]\d[A-Z] \d[A-Z]\d$"# 
-        # Francepattern = r"^\d{5}$"# 
-        # Japanpattern = r"^\d{3}-\d{4}$"# 
-        # UKpattern = r"^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$"
         timestamp = int(time.time())
         geocode_result = ''
         cityName = ''
@@ -1284,7 +1255,6 @@ class Create_IW(QWidget):
 
         return timeZone_data
   
-
 
 if __name__ == "__main__":
 
