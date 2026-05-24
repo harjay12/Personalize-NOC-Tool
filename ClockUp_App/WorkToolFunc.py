@@ -695,9 +695,7 @@ def stdrdNSO_srchFormatter(nsoStr=None):
 
 
 if __name__ == "__main__":
-    # closeSel()
-    # print(edConfig_Srch('CPEGRT0000007530')) 
-    print(NSOLook('CPEGRT0000007530'))
+
 
     print(datetime.date.today().strftime("%A").lower())
 
