@@ -416,19 +416,19 @@ def driver_init():
         service = Service()
         chrome_options.add_argument("--headless=new") # Required for headless mode
         chrome_options.add_argument("--disable-gpu")    # Recommended for some systems
-        port = portListner(9561)
+        port = portListner(f"{os.getenv('ED_PORT')}")
         print(port)
         inneDriver =''
         
         if not port:
             print("adding port")
             chrome_options.add_experimental_option("detach", True)
-            chrome_options.add_argument("--remote-debugging-port=9561")
+            chrome_options.add_argument(f"--remote-debugging-port={os.getenv('ED_PORT')}")
             inneDriver = webdriver.Chrome(service=service,options=chrome_options)
-            inneDriver.get(f"{os.getenv("ED_LINK")}")
+            inneDriver.get(f"{os.getenv('ED_LINK')}")
         else:
             print("running on port")
-            chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9561")
+            chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{os.getenv('ED_PORT')}")
             inneDriver = webdriver.Chrome(service=service,options=chrome_options)
 
         seleCloser.append(inneDriver)
@@ -599,8 +599,6 @@ def NSOLook(nsoidInput=None):
         return "Something went wrong!"
 
     
-
-    
 def oktaCheck(driver,nsoidInput=None):
     try:  # Incase tag does not exist.
         a,b,c,d,e = nsoidInput
@@ -635,6 +633,7 @@ def gLink_specPort():
         'https://ed.grteng.com/login',
     
     ])
+
 
 def closeSel():
     if len(seleCloser) != 0:
@@ -692,13 +691,8 @@ def stdrdNSO_srchFormatter(nsoStr=None):
     return dictTable_Res
 
 
-
-
 if __name__ == "__main__":
-
-
     print(datetime.date.today().strftime("%A").lower())
-
     GoogleSheetIn()
     if is_remotely_used_windows():
         print("The Windows computer might be used remotely.")
