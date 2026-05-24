@@ -20,18 +20,42 @@ from dotenv import *
 from glob import glob
 from PySide6.QtCore import *
 from selenium import webdriver
-from PySide6.QtCore import QProcess
-from selenium.webdriver.common.by import By
+from selenium.webdriver.common.by import *
+from selenium.webdriver.chrome.options import *
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
+from gspread_formatting import get_data_validation_rule
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
-import geocoder
+from selenium.common.exceptions import WebDriverException
+
 
 # Find the .env file
 dotenv_path = find_dotenv(rf'c:\Users\{os.environ["username"]}\Documents\.env')
 load_dotenv(dotenv_path)
+seleCloser = []
+
+promptPath ={
+        'pOkta' : "/html/body/div[2]/div/div/div/div[1]/button[1]",
+        'pEmail' : "/html/body/div[2]/div/div/div/form/div[2]/div/div[1]/div/div/input",
+        'pPaswd' : "/html/body/div[2]/div/div/div/form/div[2]/div/div[2]/div/div/input",
+        'pOktaIn' : "input28",
+        'psrchInputs': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div/div/input",
+        'inputNSO': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div/div/input",
+        'nsoSrchBtn': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[2]/button[2]",
+        'nocField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[4]",
+        'configFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[4]/div/a",
+        'stdField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[1]",
+        'lookUpFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[2]",
+        'pnsoInputs':"/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/form/div/div/div[1]/div/div/div/input",
+        'stdSrchBtn': "/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/form/div/div/div[2]/button[2]",
+        'nfound':"/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div[1]",
+    }
+logPrompt = {}
+pathVa = [0]*10
+
 
 # bundle_dir = getattr(
 #     sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -57,6 +81,7 @@ def cca_Path():
 UserName = ""
 PassWord = ""
 LogFail = ""
+gs_NOC = ""
 
 ADP_Time = "https://online.adp.com/signin/v1/?APPID=EeT&productId=80e309c3-7096-bae1-e053-3505430b5495&returnURL=https://eetd2.adp.com&callingAppId=EeT&TARGET=-SM-https://eetd2.adp.com/122af1p/applications/navigator/htmlnavigator"
 
@@ -143,9 +168,11 @@ def ClockingIn():
         driverIn.quit()
 
         if inRes == "The out punch was accepted.":
+            closeSel()
+
             ahkExe_Path().run_script(
                 """
-                Sleep 15000
+                Sleep 10000
                 DllCall("user32.dll\LockWorkStation")
                 """
             )
@@ -202,7 +229,8 @@ def custmInputBox_Func(bxInput=None, inputTitle=None):
                             f"{keyInputs[idx]}",
                             f"{cca_val.split(',')[idx]}",
                         )
-
+    load_dotenv(dotenv_path, override=True)
+    
 
 def CCA_LoggOns(logStatus=None):
     if logStatus == "The return from break punch was accepted.":
@@ -215,7 +243,7 @@ def CCA_LoggOns(logStatus=None):
     }
     custmInputBox_Func(bxInput, "CCA Sign In")
 
-    load_dotenv(dotenv_path, override=True)
+    # load_dotenv(dotenv_path, override=True)s
     try:
         if os.path.exists(
             r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Call Center Agent.lnk"
@@ -274,10 +302,9 @@ def kill_process(old_pid):
             print(f"Could not kill process {proc}: {e}")
 
 
-def GoogleSheetIn(inClock=None, shStatus=None):
+def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
 
-    # gc = gspread.service_account(filename=r'c:\Users\harja\OneDrive\Desktop\Python_With_Venv\ClockUp_App\gspread.json')
-
+    global gs_NOC
     inOut_office = "Office"
     pcUser = re.findall(
         r"jsaintaime?",
@@ -298,38 +325,53 @@ def GoogleSheetIn(inClock=None, shStatus=None):
     gc = gspread.oauth(credentials_filename=file_path)
     # gc = gspread.oauth()
     wb = gc.open_by_key("1fWXYlfnNS71ZPsNqXZ5ZVjSCjASnvgcHKC5idWD3cOA")
-    sh = wb.get_worksheet_by_id(101455945)
-    cell = sh.find(f"{os.getenv('NOCGSH')}")
+    # spreadsheet = gc.open("NOC Department Status Document")
+    # sh = wb.get_worksheet_by_id(101455945)
 
+    worksheet = wb.worksheet("Rep Punch Tab")
+    if shCol:
+        rule = get_data_validation_rule(worksheet, shCol)
+        return [
+            str(e)[str(e).rfind("=") + 1 : len(str(e))]
+            for e in rule.condition.values
+            if rule
+        ]
+
+    cell = worksheet.find(f"{os.getenv('NOCGSH')}")
     r = cell.row
     l = cell.col + 1
     l2 = cell.col + 2
 
-    thurs_day = datetime.date.today().strftime("%A")
+    # thurs_day = datetime.date.today().strftime("%A")
 
     if shStatus is not None:
-        sh.update_cell(r, l2, f"{shStatus}")
+        worksheet.update_cell(r, l2, f"{shStatus}")
 
     if inClock == "The in punch was accepted.":
-        sh.update_cell(r, l, inOut_office)
-        sh.update_cell(r, l2, "In")
-        if thurs_day.lower() == "wednesday" and pcUser:
-            sh.update_cell(r, l2, "CCA Call Block")
+        worksheet.update_cell(r, l, inOut_office)
+        worksheet.update_cell(r, l2, "In")
+        # if thurs_day.lower() == "wednesday" and pcUser:
+        #     worksheet.update_cell(r, l2, "CCA Call Block")
 
     elif inClock == "The out for break punch was accepted.":
-        sh.update_cell(r, l2, "Lunch")
+        worksheet.update_cell(r, l2, "Lunch")
 
     elif inClock == "The return from break punch was accepted.":
-        sh.update_cell(r, l2, "In")
-        if thurs_day.lower() == "wednesday" and pcUser:
-            sh.update_cell(r, l2, "CCA Call Block")
+        worksheet.update_cell(r, l2, "In")
+
+        # if thurs_day.lower() == "wednesday" and pcUser:
+        #     worksheet.update_cell(r, l2, "CCA Call Block")
 
     elif inClock == "The out punch was accepted.":
-        sh.update_cell(r, l, "")
-        sh.update_cell(r, l2, "")
+        worksheet.update_cell(r, l, "")
+        worksheet.update_cell(r, l2, "")
 
     if os.path.exists(file_path):
         os.remove(file_path)
+
+    gs_NOC = worksheet.cell(r, l2).value
+    if gs_NOC:
+        return gs_NOC
 
 
 def is_remotely_used_windows():
@@ -363,11 +405,303 @@ def is_remotely_used_windows():
     return False
 
 
+# --------------------------------ED Look Up with Selenium----------------------------------
+def driver_init():
+# 1. Setup Chrome options
+    try: 
+        bxInput = {"ED_LINK": "Enter your Granite ED Link", }
+        custmInputBox_Func(bxInput, "Adding Granite ED Link.")
+
+        chrome_options = Options()
+        service = Service()
+        chrome_options.add_argument("--headless=new") # Required for headless mode
+        chrome_options.add_argument("--disable-gpu")    # Recommended for some systems
+        port = portListner(9561)
+        print(port)
+        inneDriver =''
+        
+        if not port:
+            print("adding port")
+            chrome_options.add_experimental_option("detach", True)
+            chrome_options.add_argument("--remote-debugging-port=9561")
+            inneDriver = webdriver.Chrome(service=service,options=chrome_options)
+            inneDriver.get(f"{os.getenv("ED_LINK")}")
+        else:
+            print("running on port")
+            chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9561")
+            inneDriver = webdriver.Chrome(service=service,options=chrome_options)
+
+        seleCloser.append(inneDriver)
+        return inneDriver 
+    
+    except WebDriverException as err:
+        return err
+
+
+def portListner(port):
+    try:
+        # time.sleep(3)
+        cmd = f'netstat -ano | findstr ":{port}"' # Windows version
+        output = subprocess.check_output(cmd, shell=True).decode()
+        return(f"LISTENING" in output or f"ESTABLISHED" in output)
+    except subprocess.CalledProcessError:
+        return False
+    
+
+def edInit_(driver):
+
+    try: 
+ 
+        try:  # Incase tag does not exist.
+            logPrompt.update(
+                {"okta": driver.find_element(By.XPATH, f"{promptPath['pOkta']}")
+                })
+            pathVa[0] = logPrompt['okta'].text
+        except NoSuchElementException:
+            pathVa[0] = "Not found"
+
+        try:
+            logPrompt.update({
+            "email": driver.find_element(By.XPATH, f"{promptPath['pEmail']}")})
+            pathVa[1] = "Email In"
+        except NoSuchElementException:
+            pathVa[1] = "Not found"
+        
+        try:
+            logPrompt.update({
+            "paswd": driver.find_element(By.XPATH, f"{promptPath['pPaswd']}")})
+            pathVa[2] = "Password In"
+
+        except NoSuchElementException:
+            pathVa[2] = "Not found"
+
+        if "Sign in with OKTA" in pathVa[0]:
+            print(logPrompt['okta'].text)
+            logPrompt['okta'].click()
+        elif "Email In" in pathVa[1]:
+            logPrompt['email'].send_keys(os.getenv("CCA_USERNAME"))
+            logPrompt['paswd'].send_keys(os.getenv("CON_PASSW"))
+        
+        time.sleep(3)
+        try:
+            logPrompt.update({
+            "oktaSgn": driver.find_element(By.ID, f"{promptPath['pOktaIn']}")})
+            pathVa[3] = 'Okta In'
+        except NoSuchElementException:
+            pathVa[3] = "Not found"
+
+        if "Okta In" in pathVa[3]:
+            print('empty here',logPrompt['oktaSgn'].text)
+            logPrompt['oktaSgn'].send_keys(os.getenv("COND_USERNAME"))
+            driver.find_element(By.XPATH,'//*[@id="form20"]/div[2]/input').click()
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.ID,'input61'))).send_keys(os.getenv("CON_PASSW"))
+            driver.find_element(By.XPATH,'//*[@id="form53"]/div[2]/input').click()
+
+    except WebDriverException as err:
+        print(err)
+
+    
+
+def edConfig_Srch(nsoidInput=None):
+    InputTup = ('nocField','configFeild', 'inputNSO','nsoSrchBtn',nsoidInput)
+    
+    driver = driver_init()
+    try:
+        if driver.msg:
+            return  "Unable to load the page. You need to Sign in to Granite VPN to access this page."
+    except BaseException:
+        pass
+    
+    time.sleep(3)
+    edInit_(driver)
+    time.sleep(2)
+
+    try:
+        try:
+            driver.find_element(By.XPATH, f'{promptPath['pnsoInputs']}')
+            driver.find_element(By.XPATH,'/html/body/div[2]/header/div/div/a').click()
+        except NoSuchElementException:
+            pass
+        
+        try:
+            driver.find_element(By.XPATH, f'{promptPath['psrchInputs']}')
+        except NoSuchElementException:
+            WebDriverWait(driver, 30).until(
+                        EC.presence_of_element_located((By.XPATH,f"{promptPath['nocField']}"))).click()
+            
+            WebDriverWait(driver, 30).until(
+                        EC.presence_of_element_located((By.XPATH,f"{promptPath['configFeild']}"))).click()
+
+        WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.XPATH,  f"{promptPath['inputNSO']}"))).clear()
+        
+        driver.find_element(By.XPATH,f"{promptPath['inputNSO']}").send_keys(nsoidInput)
+        driver.find_element(By.XPATH,f"{promptPath['nsoSrchBtn']}").click()
+
+        oktaCheck(driver,InputTup)
+
+        # print( WebDriverWait(driver, 30).until(
+        #        EC.presence_of_element_located((By.XPATH,'//*[@id="output"]/div[2]/div'))).text)
+    
+        return WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH,'//*[@id="output"]/div[2]/div'))).text
+            
+    except BaseException as err:
+        return 'Something went wrong!'
+      
+
+
+def NSOLook(nsoidInput=None):
+    
+    InputTup = ('stdField','lookUpFeild', 'pnsoInputs','stdSrchBtn',nsoidInput)
+    driver = driver_init()
+
+    try:
+        if driver.msg:
+            return  "Unable to load the page. You need to Sign in to Granite VPN to access this page."
+    except BaseException:
+        pass
+
+    time.sleep(3)
+    edInit_(driver)
+    time.sleep(2)
+
+    try:
+        try:
+            driver.find_element(By.XPATH, f'{promptPath['psrchInputs']}')
+            driver.find_element(By.XPATH,'/html/body/div[2]/header/div/div/a').click()
+        except NoSuchElementException:
+            pass
+
+        try:
+            driver.find_element(By.XPATH, f'{promptPath['pnsoInputs']}')
+        except NoSuchElementException:
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.XPATH,f"{promptPath['stdField']}"))).click()
+                
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.XPATH,f"{promptPath['lookUpFeild']}"))).click()
+            
+        WebDriverWait(driver, 30).until(
+                        EC.presence_of_element_located((By.XPATH,  f"{promptPath['pnsoInputs']}"))).clear()
+        driver.find_element(By.XPATH, f'{promptPath['pnsoInputs']}').send_keys(nsoidInput)
+        driver.find_element(By.XPATH,f"{promptPath['stdSrchBtn']}").click()
+
+        oktaCheck(driver,InputTup)
+        
+        # print(WebDriverWait(driver, 30).until(
+        #                 EC.presence_of_element_located((By.XPATH,'/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/div[2]'))).text)
+        return WebDriverWait(driver, 30).until(
+                            EC.presence_of_element_located((By.XPATH,'/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/div[2]'))).text
+    
+    except BaseException as err:
+        return "Something went wrong!"
+
+    
+
+    
+def oktaCheck(driver,nsoidInput=None):
+    try:  # Incase tag does not exist.
+        a,b,c,d,e = nsoidInput
+ 
+        time.sleep(1.5)
+        driver.find_element(By.XPATH, f"{promptPath['pOkta']}").click()
+        WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.XPATH,f"{promptPath[str(a)]}"))).click()
+        WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.XPATH,f"{promptPath[str(b)]}"))).click()
+        print('Okta test pass here!')
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH,  f"{promptPath[str(c)]}"))).clear()
+        driver.find_element(By.XPATH, f'{promptPath[str(c)]}').send_keys(str(e))
+        driver.find_element(By.XPATH,f"{promptPath[str(d)]}").click()
+        
+    except NoSuchElementException:
+        return False
+    
+
+def gLink_specPort():
+
+    port = 9561
+    user_data_dir = rf'C:\Users\{os.environ["username"]}\AppData\Local\Google\Chrome\User Data\Default' 
+    chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+
+    # Launch Chrome with specific flags
+    subprocess.Popen([
+        chrome_path,
+        f"--remote-debugging-port={port}",
+        f"--user-data-dir={user_data_dir}",
+        'https://ed.grteng.com/login',
+    
+    ])
+
+def closeSel():
+    if len(seleCloser) != 0:
+        print(("Yes"))
+        seleCloser[0].close()
+        seleCloser[0].quit()
+    Stop_portListener()
+
+
+def Stop_portListener():
+    try:
+        cmd = f'netstat -ano | findstr ":{9561}"' # Windows version
+        output = subprocess.check_output(cmd, shell=True).decode()
+        if (f"LISTENING" in output or f"ESTABLISHED" in output):
+            pidTokill = re.search(r'(LISTENING\s*\d+)',str(output))
+            pidTokill = "".join(re.findall(r'\d+',pidTokill.group(0))) 
+            print(pidTokill) 
+        
+            psutil.Process(int(pidTokill)).kill()
+    except subprocess.CalledProcessError:
+        return False
+
+
+def nsoTableFormat(dict_listVal=None):
+    res = ''
+    for key, val in dict_listVal.items():
+        res =   res +"\n" +  f"\n{key:<10}\n"
+        for row in val:
+            res = res +  (f"\n\t{row[0]:<20} \t{row[1]:<10}")
+    return res
+    
+    
+def stdrdNSO_srchFormatter(nsoStr=None):
+    tempArr = []
+    formatToDicy ={}
+
+    nsoStr  =  nsoStr.strip().split('\n')
+    for header in nsoStr:
+        if 'Details' in header:
+            tempArr.append(header)
+
+    for cnt in range(0, len(tempArr)-1):
+ 
+        if tempArr[cnt] in nsoStr:
+            start = nsoStr.index(tempArr[cnt])
+            end = nsoStr.index(tempArr[cnt+1])
+            pairs = [nsoStr[start+1 : end][i:i+2] for i in range(0, len(nsoStr[start+1 : end]), 2)]
+
+            formatToDicy.update({tempArr[cnt]: pairs})
+            if end == nsoStr.index(tempArr[len(tempArr)-1]):
+                pairs = [nsoStr[end+1:][i:i+2] for i in range(0, len(nsoStr[end+1]), 2)]
+
+                formatToDicy.update({tempArr[len(tempArr)-1]: pairs})
+    dictTable_Res = nsoTableFormat(formatToDicy)
+    return dictTable_Res
+
+
+
+
 if __name__ == "__main__":
+    # closeSel()
+    # print(edConfig_Srch('CPEGRT0000007530')) 
+    print(NSOLook('CPEGRT0000007530'))
 
     print(datetime.date.today().strftime("%A").lower())
 
-    GoogleSheetIn("", "")
+    GoogleSheetIn()
     if is_remotely_used_windows():
         print("The Windows computer might be used remotely.")
     else:

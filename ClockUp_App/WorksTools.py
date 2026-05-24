@@ -1,3 +1,4 @@
+
 # This Python file uses the following encoding: utf-8
 """
 Important:
@@ -12,15 +13,20 @@ import time
 import json
 import psutil
 import ahkFunc
+import requests
+import pgeocode
+import subprocess
 import traceback
-import ipaddress
+import googlemaps
 import WorkToolFunc
+from PySide6.QtWebEngineWidgets import *
 from dotenv import *
 import secretCompdetails
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 from ui_form import Ui_MainWindow
+
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 
@@ -36,8 +42,26 @@ ipBloks = {
     "/30 Block of 2": 2,
     "/29 Block of 5": 6,
     "/28 Block of 16": 14,
+    "Trace Route": 1,
 }
 usableIP = []
+
+clor = [
+    "",
+    "rgb(181, 181, 181)",
+    "rgb(16, 255, 136)",
+    "rgb(229, 204, 102)",
+    "rgb(229, 204, 102)",
+    "rgb(98, 42, 166)",
+    "rgb(230, 147, 46)",
+    "rgb(21, 60, 186)",
+    "rgb(86, 126, 116)",
+    "rgb(255, 53, 35)",
+    "rgb(154,80,0)",
+]
+
+
+
 
 
 class WorkerSignals(QObject):
@@ -79,6 +103,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.resize(621, 468)
+
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
@@ -95,10 +122,18 @@ class MainWindow(QMainWindow):
 
             self.ui.Subnet_Box.addItems([blk for blk in ipBloks])
             self.ui.NipComboBox.addItems(["", "60", "100", "250", "Continuous Ping"])
+            # GoogleSheetIn(shCol='P7')
+            self.ui.gspreadComboBox.addItem("NOC Status", 0)
+            self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
+            self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
+            bn = "rgb(16, 255, 136)"
+
             self.processList = []
+
             self.cliWidgesList = []
             self.statusLink = ""
-            # self.phoneNm = ""
+            self.inputCode = ''
+
             self.msg_box = QMessageBox(
                 QMessageBox.Information,
                 # This title will not be displayed
@@ -108,21 +143,16 @@ class MainWindow(QMainWindow):
                 None,
                 Qt.WindowType.FramelessWindowHint,
             )
+            self.DropDwnStyle()
+            self.flexBtnisOn = False
 
             # ----------------Sign in/ out/ Lunch---------------
             self.ui.ClockInpushButton.clicked.connect(self.SignIn_Send)
             # ------------------CCA Sign i------------------------------------
             self.ui.CCA_pushButton.clicked.connect(self.CCA_Send)
             # ---------------------NOC Google Sheet status change IN------------------
-            self.ui.Off_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.In_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.Break_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.Lunch_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.IW_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.Out_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.Training_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.InterEscal_pushButton.clicked.connect(self.NOC_StatusBtns)
-            self.ui.CCABlock_pushButton.clicked.connect(self.NOC_StatusBtns)
+            self.ui.CreateIW_pushBtn.clicked.connect(self.Creat_IW)
+            self.ui.FedgeLookUp.clicked.connect(self.flexFun)
 
             # ----------------------------Condustors--------------------------
             self.ui.comboBox.currentTextChanged.connect(self.conductors)
@@ -130,16 +160,16 @@ class MainWindow(QMainWindow):
             # -----------------------------CLI for ping initiate-----------------------
             self.ui.PingButton.clicked.connect(self.multi_Pages)
             # -------------------------------- Page navigation
-            self.ui.Prev_pushButton.clicked.connect(self.go_to_previous_page)
-            self.ui.Next_Button.clicked.connect(self.go_to_next_page)
-            self.ui.Home_Button.clicked.connect(
+            self.ui.Prev_pushBtn.clicked.connect(self.go_to_previous_page)
+            self.ui.Next_pushBtn.clicked.connect(self.go_to_next_page)
+            self.ui.Home_pushBtn.clicked.connect(
                 lambda: self.ui.stackedWidget.setCurrentIndex(0)
             )
             self.ui.stackedWidget.currentChanged.connect(self.changesPages)
-            self.ui.CloseTab.clicked.connect(self.clear_stacked_widget)
+            self.ui.Close_pushBtn.clicked.connect(self.clear_stacked_widget)
 
-            self.ui.End_Pings.clicked.connect(self.terminateSinglePing)
-            self.ui.allEnd_Pings.clicked.connect(
+            self.ui.endPing_pushBtn.clicked.connect(self.terminateSinglePing)
+            self.ui.endAllPing_pushBtn.clicked.connect(
                 lambda: [p.kill() for p in self.processList]
             )
 
@@ -152,17 +182,17 @@ class MainWindow(QMainWindow):
             self.timer.timeout.connect(self.show_time)
             self.timer.start()
 
-            self.ui.Prev_pushButton.setVisible(False)
-            self.ui.Home_Button.setVisible(False)
-            self.ui.Next_Button.setVisible(False)
-            self.ui.CloseTab.setVisible(False)
-            self.ui.End_Pings.setVisible(False)
-            self.ui.allEnd_Pings.setVisible(False)
+            self.ui.Prev_pushBtn.setVisible(False)
+            self.ui.Home_pushBtn.setVisible(False)
+            self.ui.Next_pushBtn.setVisible(False)
+            self.ui.Close_pushBtn.setVisible(False)
+            self.ui.endPing_pushBtn.setVisible(False)
+            self.ui.endAllPing_pushBtn.setVisible(False)
             self.ui.NSOID.setVisible(False)
-            self.ui.CCABBRcomboBox2.setVisible(False)
-            self.ui.CCABBRcomboBox3.setVisible(False)
 
+         
             self.threadpool = QThreadPool().globalInstance()
+            
 
         except KeyboardInterrupt:
             pass
@@ -193,8 +223,14 @@ class MainWindow(QMainWindow):
 
     def ADP_executeTrhead(self):
         pidCheck = self.ahkOld_Pid()
+
         WorkToolFunc.ClockingIn()
         WorkToolFunc.kill_process(*pidCheck)
+        StasUp = WorkToolFunc.GoogleSheetIn()
+        if self.ui.gspreadComboBox.findText(StasUp):
+            self.ui.gspreadComboBox.setCurrentText(StasUp)
+        else:
+            self.ui.gspreadComboBox.setCurrentIndex(0)
         return "Done."
 
     def CALLs_executeTrhead(self, phoneNm, pidCheck):
@@ -218,65 +254,129 @@ class MainWindow(QMainWindow):
 
     def Cond_executeTrhead_Func(self):
         pidCheck = self.ahkOld_Pid()
+
         win = WorkToolFunc.ahkExe_Path().active_window
         if win:
             win.move(
                 x=win.get_position().x, y=win.get_position().y, width=1682, height=977
             )
-
             time.sleep(3)
+            print('after: ', f'{os.getenv("CON_PASSW")},{self.inputCode}')
             ahkFunc.runCund(
-                userN=os.getenv("COND_USERNAME"), condPassW=os.getenv("CON_PASSW")
+                userN=os.getenv("COND_USERNAME"), condPassW=f'{os.getenv("CON_PASSW")},{self.inputCode}'
             )
 
             WorkToolFunc.kill_process(*pidCheck)
         return "Done."
+
+   
+
+#----------------------------------------------------------------------------
+    def flexFun(self,):
+        flexArr = (self.threadpool,self.ui.stackedWidget)
+        FlexEdgeLookUpObj = FlexEdgeookUp(self.ui.centralwidget,flexArr)
+       
+        if not self.flexBtnisOn:
+            while self.ui.stackedWidget.count() > 1:
+                    widget = self.ui.stackedWidget.widget(1)
+                    self.ui.stackedWidget.removeWidget(widget)
+                    widget.deleteLater()  # Schedule for deletion
+
+        FlexEdgeLookUpObj.edComboBox.currentTextChanged.connect(lambda: self.Flex_combosetup(FlexEdgeLookUpObj))
+        
+        self.ui.stackedWidget.addWidget(FlexEdgeLookUpObj)
+        self.ui.stackedWidget.setCurrentIndex(self.ui.stackedWidget.count() - 1)  # Display the first page
+        self.flexBtnisOn = True
+     
+        self.ui.endPing_pushBtn.setVisible(False)
+        self.ui.endAllPing_pushBtn.setVisible(False)
+
+ 
+    def Flex_combosetup(self,FlexEdgeLookUpObj):
+        flexArr = (self.threadpool,self.ui.stackedWidget)
+        temp = FlexEdgeookUp(self.ui.centralwidget,flexArr)
+        if self.ui.stackedWidget.count() - 1 < 2:
+            if (FlexEdgeLookUpObj.edComboBox.currentText() == 'ED Standdard'
+                and self.ui.stackedWidget.currentIndex() == 1):
+                FlexEdgeLookUpObj.edComboBox.setCurrentIndex(0)
+                self.ui.stackedWidget.addWidget(temp)
+                temp.edComboBox.setCurrentIndex(1)
+                temp.condPushBtn.setVisible(False)
+                temp.text_outputF.clear()
+                temp.text_outputF.append(f'{temp.startScreen1}')
+            
+            self.ui.stackedWidget.setCurrentIndex(self.ui.stackedWidget.count() - 1)  # Display the first page
+
+
+    # -------------------------------IW Create---------------------------
+
+    def Creat_IW(self):
+        if not self.flexBtnisOn:
+            while self.ui.stackedWidget.count() > 1:
+                    widget = self.ui.stackedWidget.widget(1)
+                    self.ui.stackedWidget.removeWidget(widget)
+                    widget.deleteLater()  # Schedule for deletion
+
+        self.ui.stackedWidget.addWidget(Create_IW(self.ui.centralwidget))
+        self.ui.stackedWidget.setCurrentIndex(self.ui.stackedWidget.count() - 1)
+        self.flexBtnisOn = True
+
+        self.ui.endPing_pushBtn.setVisible(False)
+        self.ui.endAllPing_pushBtn.setVisible(False)
+     
+
+        # self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     # --------------------------------------- Change page---------------------------------------------
 
     def changesPages(self):
 
         try:
+                    
             if self.ui.stackedWidget.currentIndex() == 0:
-                self.ui.CloseTab.setText("Close All Tab")
+                self.ui.Close_pushBtn.setText("Close All Tab")
 
-                self.ui.stackedWidget.setGeometry(QRect(0, -10, 521, 461))
+                self.resize(621, 468)
 
-                self.ui.Prev_pushButton.setVisible(False)
-                self.ui.Home_Button.setVisible(False)
-                self.ui.Next_Button.setVisible(True)
-                self.ui.End_Pings.setVisible(False)
-                self.ui.allEnd_Pings.setVisible(False)
-                self.ui.CloseTab.setVisible(True)
+                self.ui.Prev_pushBtn.setVisible(False)
+                self.ui.Home_pushBtn.setVisible(False)
+                self.ui.Next_pushBtn.setVisible(True)
+                self.ui.endPing_pushBtn.setVisible(False)
+                self.ui.endAllPing_pushBtn.setVisible(False)
+                self.ui.Close_pushBtn.setVisible(True)
 
             elif (
                 self.ui.stackedWidget.currentIndex()
                 == self.ui.stackedWidget.count() - 1
             ):
-                self.ui.Prev_pushButton.setVisible(True)
-                self.ui.Home_Button.setVisible(True)
-                self.ui.Next_Button.setVisible(False)
-                self.ui.CloseTab.setVisible(True)
-                self.ui.End_Pings.setVisible(True)
-                self.ui.allEnd_Pings.setVisible(True)
-                self.ui.stackedWidget.setGeometry(QRect(10, 0, 500, 400))
+                self.ui.Prev_pushBtn.setVisible(True)
+                self.ui.Home_pushBtn.setVisible(True)
+                self.ui.Next_pushBtn.setVisible(False)
+                self.ui.Close_pushBtn.setVisible(True)
+                self.ui.endPing_pushBtn.setVisible(True)
+                self.ui.endAllPing_pushBtn.setVisible(True)
 
-                self.ui.CloseTab.setText(
+                self.ui.Close_pushBtn.setText(
                     f"Close Tab: {self.ui.stackedWidget.currentIndex()}"
                 )
 
             else:
-                self.ui.Prev_pushButton.setVisible(True)
-                self.ui.Home_Button.setVisible(True)
-                self.ui.Next_Button.setVisible(True)
-                self.ui.CloseTab.setVisible(True)
-                self.ui.End_Pings.setVisible(True)
-                self.ui.allEnd_Pings.setVisible(True)
+                self.ui.Prev_pushBtn.setVisible(True)
+                self.ui.Home_pushBtn.setVisible(True)
+                self.ui.Next_pushBtn.setVisible(True)
+                self.ui.Close_pushBtn.setVisible(True)
+                self.ui.endPing_pushBtn.setVisible(True)
+                self.ui.endAllPing_pushBtn.setVisible(True)
 
-                self.ui.stackedWidget.setGeometry(QRect(10, 0, 500, 400))
-                self.ui.CloseTab.setText(
+                self.ui.Close_pushBtn.setText(
                     f"Close Tab: {self.ui.stackedWidget.currentIndex()}"
                 )
+            if self.flexBtnisOn or self.ui.FedgeLookUp.isChecked():
+        
+                    self.ui.endPing_pushBtn.setVisible(False)
+                    self.ui.endAllPing_pushBtn.setVisible(False)
+
+            
         except BaseException as err:
             print(err)
 
@@ -295,9 +395,10 @@ class MainWindow(QMainWindow):
     # ---------------------------------------Part of Run Ping function---------------------------------------------
 
     def multi_Pages(self):
+        self.flexBtnisOn = False
 
         try:
-
+         
             for pidProcess in self.processList:
                 if self.process.state() == QProcess.Running:
                     pidProcess.kill()
@@ -313,7 +414,11 @@ class MainWindow(QMainWindow):
 
             GWIP = self.ui.GWIPlineEdit.text().replace(" ", "")
 
-            is_ValidIP = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*", GWIP)
+            is_ValidIP = re.search(
+                r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*|(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]", GWIP)
+
+            # is_ValidIP = re.search(r"(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]", GWIP)
+
             if not is_ValidIP:
                 self.msg_box.setText(
                     "The Gateway IP Address is not valid.\t"
@@ -322,8 +427,8 @@ class MainWindow(QMainWindow):
                 self.msg_box.exec()
                 self.cliWidgesList.clear()
                 usableIP.clear()
-                self.ui.Next_Button.setVisible(False)
-                self.ui.CloseTab.setVisible(False)
+                self.ui.Next_pushBtn.setVisible(False)
+                self.ui.Close_pushBtn.setVisible(False)
 
                 return
 
@@ -353,40 +458,53 @@ class MainWindow(QMainWindow):
 
             for i in range(0, ipBloks[currentBlk]):
 
-                neighborsIp = f"{GWIP[:ipLstDt+1]}{str(int(ipLstOctet) + i)}"
-
-                usableIP.append(neighborsIp)
+                # usableIP.append(neighborsIp)
                 self.process = QProcess()
                 self.cliWidges = CliWidget(self.ui.centralwidget, self.process)
 
                 self.cliWidgesList.append(self.cliWidges)
                 self.ui.stackedWidget.addWidget(self.cliWidges)
                 self.processList.append(self.process)
+                if '.com' in is_ValidIP.group(0):
+                    usableIP.append(GWIP) 
+                    break
+                else:
+                    neighborsIp = f"{GWIP[:ipLstDt+1]}{str(int(ipLstOctet) + i)}"
+                    usableIP.append(neighborsIp)
+         
 
             self.ui.stackedWidget.setCurrentIndex(1)  # Display the first page
+            if self.ui.Subnet_Box.currentText() == "Trace Route":
+                self.cliWidgesList[0].start_cli_program(
+                            "cmd.exe", ["/k", f"tracert {usableIP[0]}"]
+                        )
+            else:
 
-            for ip in range(len(usableIP)):
-                if self.ui.NipComboBox.currentText() == "Continuous Ping":
-                    self.cliWidgesList[ip].start_cli_program(
-                        "cmd.exe", ["/k", f"ping -t {usableIP[ip]}"]
-                    )
+                for ip in range(len(usableIP)):
+                    if self.ui.NipComboBox.currentText() == "Continuous Ping":
+                        self.cliWidgesList[ip].start_cli_program(
+                            "cmd.exe", ["/k", f"ping -t {usableIP[ip]}"]
+                        )
 
-                elif self.ui.NipComboBox.currentText() != "":
-                    self.cliWidgesList[ip].start_cli_program(
-                        "cmd.exe",
-                        [
-                            "/k",
-                            f"ping -n {self.ui.NipComboBox.currentText()} {usableIP[ip]}",
-                        ],
-                    )
+                    elif self.ui.NipComboBox.currentText() != "":
+                        self.cliWidgesList[ip].start_cli_program(
+                            "cmd.exe",
+                            [
+                                "/k",
+                                f"ping -n {self.ui.NipComboBox.currentText()} {usableIP[ip]}",
+                            ],
+                        )
 
-                else:
-                    self.cliWidgesList[ip].start_cli_program(
-                        "cmd.exe", ["/k", f"ping  {usableIP[ip]}"]
-                    )
+                    else:
+                        self.cliWidgesList[ip].start_cli_program(
+                            "cmd.exe", ["/k", f"ping  {usableIP[ip]}"]
+                        )
+                    
 
             self.cliWidgesList.clear()
             usableIP.clear()
+           
+    
         except BaseException as err:
             print(err)
 
@@ -421,16 +539,16 @@ class MainWindow(QMainWindow):
                 self.ui.stackedWidget.removeWidget(widget)
                 widget.deleteLater()  # Schedule for deletion
                 if self.ui.stackedWidget.count() == 1:
-                    self.ui.Prev_pushButton.setVisible(False)
-                    self.ui.Home_Button.setVisible(False)
-                    self.ui.Next_Button.setVisible(False)
-                    self.ui.CloseTab.setVisible(False)
+                    self.ui.Prev_pushBtn.setVisible(False)
+                    self.ui.Home_pushBtn.setVisible(False)
+                    self.ui.Next_pushBtn.setVisible(False)
+                    self.ui.Close_pushBtn.setVisible(False)
 
             else:
-                self.ui.Prev_pushButton.setVisible(False)
-                self.ui.Home_Button.setVisible(False)
-                self.ui.Next_Button.setVisible(False)
-                self.ui.CloseTab.setVisible(False)
+                self.ui.Prev_pushBtn.setVisible(False)
+                self.ui.Home_pushBtn.setVisible(False)
+                self.ui.Next_pushBtn.setVisible(False)
+                self.ui.Close_pushBtn.setVisible(False)
 
                 while self.ui.stackedWidget.count() > 1:
                     # Get the widget at index 0
@@ -534,7 +652,7 @@ class MainWindow(QMainWindow):
             WorkToolFunc.kill_process(*pidCheck)
 
         else:
-            print("Nonee")
+            print("None")
 
     # ---------------------------------------Google Sign in Sheet---------------------------------------------
 
@@ -551,6 +669,7 @@ class MainWindow(QMainWindow):
                     set_key(dotenv_path, f"{key}", f"{value}")
 
         return
+    
 
     def NOC_StatusBtns(self):
         pidCheck = self.ahkOld_Pid()
@@ -575,29 +694,42 @@ class MainWindow(QMainWindow):
 
         load_dotenv(dotenv_path, override=True)
 
-        sender_button = self.sender()  # Get the object that emitted the signal
-        btnList = {
-            "Off_pushButton": "Off",
-            "In_pushButton": "In",
-            "Break_pushButton": "Break",
-            "Out_pushButton": "Out",
-            "Lunch_pushButton": "Lunch",
-            "IW_pushButton": "Extended NI",
-            "Training_pushButton": "Training",
-            "InterEscal_pushButton": "Internal Escalations",
-            "CCABlock_pushButton": "CCA Call Block",
-        }
         try:
-            for btnKey, btnVal in btnList.items():
-                if sender_button.objectName() == btnKey:
-                    self.With_worker = Worker_QRunnable(self.GS_executeTrhead, btnVal)
+            if self.ui.gspreadComboBox.currentIndex() != 0:
+                currentstatus = self.ui.gspreadComboBox.currentText()
+                if currentstatus:
+
+                    print(currentstatus)
+
+                    self.With_worker = Worker_QRunnable(
+                        self.GS_executeTrhead, currentstatus
+                    )
                     self.threadpool.start(self.With_worker)
 
-            if sender_button.objectName() == "Lunch_pushButton":
-                self.With_worker = Worker_QRunnable(
-                    self.CCA_executeTrhead, sender_button.objectName(), pidCheck
-                )
+                    if currentstatus == "Lunch":
+
+                        self.With_worker = Worker_QRunnable(
+                            self.CCA_executeTrhead, currentstatus.strip(), pidCheck
+                        )
+                        self.threadpool.start(self.With_worker)
+            else:
+                self.With_worker = Worker_QRunnable(self.GS_executeTrhead, "")
                 self.threadpool.start(self.With_worker)
+
+            self.DropDwnStyle()
+
+            # self.ui.gspreadComboBox.setItemData(1,QColor( Qt.red ), Qt.BackgroundRole)
+
+            # for btnKey, btnVal in btnList.items():
+            #     if sender_button.objectName() == btnKey:
+            #         self.With_worker = Worker_QRunnable(self.GS_executeTrhead, btnVal)
+            #         self.threadpool.start(self.With_worker)
+
+            # if sender_button.objectName() == "Lunch_pushButton":
+            #     self.With_worker = Worker_QRunnable(
+            #         self.CCA_executeTrhead, sender_button.objectName(), pidCheck
+            #     )
+            #     self.threadpool.start(self.With_worker)
 
         except BaseException as e:
 
@@ -628,6 +760,15 @@ class MainWindow(QMainWindow):
         }
         WorkToolFunc.custmInputBox_Func(bxInput, "Conductors Sign In")
         load_dotenv(dotenv_path, override=True)
+        if self.ui.CodelineEdit.text()=="":
+            self.msg_box.setText(
+                "Enter The Oakta codee please.\t"
+                
+            )
+            self.msg_box.exec()
+            return
+        self.inputCode = self.ui.CodelineEdit.text()
+
 
         if nsoidStr.startswith("CPEGRT"):
             WorkToolFunc.ahkExe_Path().run_script(
@@ -645,6 +786,7 @@ class MainWindow(QMainWindow):
 
         time.sleep(1)
         QTimer().singleShot(100, self.nsoID_Vis)
+        QTimer().singleShot(5000, lambda: self.ui.CodelineEdit.clear())
         self.ui.NSOID.clear()
         self.ui.comboBox.setCurrentIndex(0)
 
@@ -686,9 +828,53 @@ class MainWindow(QMainWindow):
                 if self.process.state() == QProcess.Running:
                     pidProcess.kill()
                     self.process.waitForFinished(50)
+            WorkToolFunc.Stop_portListener()  
 
         except AttributeError:
             pass
+
+    def DropDwnStyle(self):
+
+        self.ui.gspreadComboBox.setStyleSheet(
+            f"""
+            QComboBox {{
+                border: 2px solid darkgray;
+                border-radius: 5px;
+                padding: 1px 18px 1px 3px; /* Adjust padding for the arrow */
+                background-color: {clor[self.ui.gspreadComboBox.currentIndex()]}
+                
+            }}
+            QComboBox:hover {{
+                border: 0.5px solid black;
+            }}
+            QComboBox::drop-down {{
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 15px;
+                border-left-width: 1px;
+                border-left-color: darkgray;
+                border-left-style: solid;
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                                  stop: 0 #E1E1E1, stop: 1 #D3D3D3);
+                
+            }}
+            QComboBox::down-arrow {{
+                /* You can use an image here */
+               image: url({self.ui.file_path}); 
+                
+                height: 10px;
+                width: 10px;
+            }}
+            QComboBox QAbstractItemView {{
+                border: 2px solid darkgray;
+                selection-background-color: blue;
+                background-color: white;
+                color: black;
+            }}
+        """
+        )
 
 
 class CliWidget(QWidget):
@@ -721,6 +907,7 @@ class CliWidget(QWidget):
         self.process.readyReadStandardError.connect(self.read_error)
         self.process.finished.connect(self.handle_finished)
 
+
     @Slot()
     def start_cli_program(self, program, param):
         print(f"Starting: {program} {param}")
@@ -728,10 +915,14 @@ class CliWidget(QWidget):
 
     @Slot()
     def read_output(self):
-        data = self.process.readAllStandardOutput().data().decode().strip()
-        if data:
-            self.text_output.append(data)
-            self.parse_ping_times(data)
+        # data = self.process.readAllStandardOutput().data().decode('utf-8').strip()
+        # if data:
+        #     self.text_output.append(data)
+        #     self.parse_ping_times(data)
+        while self.process.canReadLine():
+            line = self.process.readLine().data().decode('utf-8').strip()
+            self.text_output.append(line)
+            self.parse_ping_times(line)
 
     @Slot()
     def read_error(self):
@@ -809,7 +1000,289 @@ class CliWidget(QWidget):
             print("error found!")
 
 
+
+ # ------------------------------- FlexEdge look up ---------------------------
+
+class FlexEdgeookUp(QWidget):
+    def __init__(self,parent=None, args=None):
+        super().__init__(parent)
+        self.args = args
+        self.threadpool,self.stackedWidget = args
+
+        self.layout = QVBoxLayout()
+        self.text_outputF = QTextEdit()
+        self.command_input = QLineEdit()
+        self.condPushBtn = QPushButton('Conductor')
+        self.GlinlPushBtn = QPushButton('Close GLink')
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.startScreen = '+----------------------+\n| FlexEdge Lookup Tool |' \
+        '\n+----------------------+\nNSOID Format: CPEGRT00000xxxxx\n\nEnter NSOID to find: '
+
+        self.startScreen1 = '+----------------------+\n| FlexEdge Lookup Tool |' \
+                    '\n+----------------------+\nNSOID Format: ' \
+                    'CPEGRT00000xxxxx, or NSODIA00000xxxxx, or CPEVYS00000xxxxx.\n\nEnter NSOID to find: '
+        self.text_outputF.append(f'{self.startScreen}')
+        self.edComboBox = QComboBox()
+        self.edComboBox.addItems(['NSO Config','ED Standdard'])
+    
+        self.horizontalLayout_4.addWidget(self.edComboBox)
+        self.horizontalLayout_4.addWidget(self.command_input)
+        self.horizontalLayout_4.addWidget(self.condPushBtn)
+        self.horizontalLayout_4.addWidget(self.GlinlPushBtn)
+
+        self.conInput = ''
+        self.nsoidFormat = ''
+        self.stattsVal = ''
+
+        self.layout.addWidget(self.text_outputF)
+        self.layout.addLayout(self.horizontalLayout_4)
+  
+        self.setLayout(self.layout)
+
+        self.text_outputF.setStyleSheet(
+            "background-color: rgb(0, 0, 0);\n"
+            "color: rgb(255, 255, 255);\n"
+            "font-family: Verdana, Arial, Helvetica, sans-serif;\n"
+            "font-size: 13px;\n"
+            "font-style: normal;\n"
+            "font-variant: normal;\n"
+            "font-weight: normal;\n"
+            "border-radius: 5px;"
+        )
+        # Connect signals
+        self.command_input.returnPressed.connect(self.edNSOIDLookUp)
+        self.condPushBtn.clicked.connect(self.condSearch)
+        self.GlinlPushBtn.clicked.connect(lambda: WorkToolFunc.closeSel())
+        
+
+    def condSearch(self):
+        self.stattsVal = re.search(
+                r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*",
+                self.text_outputF.toPlainText(),
+                flags=re.IGNORECASE)
+    
+        if self.stattsVal and self.nsoidFormat:
+            urlLink= f"https://{self.stattsVal}/routers/{self.nsoidFormat}"
+            text, ok = QInputDialog.getText(None, "OKTA CODE", "Enter your Okta code:")
+            if text and ok:
+                
+                self.mainWinComponent = MainWindow()
+                self.mainWinComponent.inputCode = text
+                WorkToolFunc.ahkExe_Path().run_script(
+                    f'Run "{urlLink}"'
+                )
+                self.With_worker = Worker_QRunnable(self.mainWinComponent.Cond_executeTrhead_Func)
+                self.threadpool.start(self.With_worker)
+            else:
+                return
+        
+    def edNSOI_executeTrhead(self):
+      
+        if self.edComboBox.currentIndex() == 0:
+            self.text_outputF.append(
+                WorkToolFunc.edConfig_Srch(self.nsoidFormat
+            ))
+            self.condPushBtn.setVisible(True)
+     
+                
+        elif self.edComboBox.currentIndex() == 1:
+
+            search2 = WorkToolFunc.stdrdNSO_srchFormatter(
+                                WorkToolFunc.NSOLook(self.nsoidFormat))
+
+            self.text_outputF.append(search2)
+
+        return "Done."
+
+
+    def edNSOIDLookUp(self):
+        self.text_outputF.clear()
+
+        self.text_outputF.append(f'{self.startScreen}')
+        self.nsoidFormat = self.command_input.text().upper()
+        self.text_outputF.append(f'{self.nsoidFormat}\n')
+
+        self.CPEGRTchecker = re.search( r'(^CPEGRT0{5,}\d{5}$)',self.nsoidFormat, flags=re.IGNORECASE) 
+        self.NSODIchecker =  re.search( r'(^NSODIA0{5,}\d{5}$)',self.nsoidFormat, flags=re.IGNORECASE)
+        self.CPEVYSTchecker = re.search( r'(^CPEVYS0{5,}\d{5}$)',self.nsoidFormat, flags=re.IGNORECASE)
+        self.command_input.clear()
+
+        if not self.CPEGRTchecker and self.edComboBox.currentIndex() == 0:
+
+
+            self.text_outputF.append(f'Error: NSOID entered is invalid; format '
+                    'CPEGRT00000xxxxx\n\nEnter NSOID to find:')
+            return
+        elif not (self.CPEGRTchecker or self.NSODIchecker or self.CPEVYSTchecker):
+            self.text_outputF.clear()
+            self.text_outputF.append(f'{self.startScreen1}')
+            self.text_outputF.append(f'{self.nsoidFormat}\n')
+
+            self.text_outputF.append(f'Error: NSOID entered is invalid; see the format below: \n'+
+                        '\tCPEGRT00000xxxxx \n\tNSODIA00000xxxxx '
+                        '\n\tCPEVYS00000xxxxx\n\nEnter NSOID to find:')
+            return
+            
+        self.With_worker = Worker_QRunnable(self.edNSOI_executeTrhead)
+        self.threadpool.start(self.With_worker)
+      
+
+
+class Create_IW(QWidget):
+    def __init__(self,parent=None):
+        super().__init__(parent)
+
+        self.gridLayout_7 = QGridLayout()
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.TickInfo = QLabel()
+        self.TickInfo.setObjectName(u"TickInfo")
+
+        self.gridLayout_7.addWidget(self.TickInfo, 1, 1, 1, 2)
+
+        self.pushButton = QPushButton('Send')
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.gridLayout_7.addWidget(self.pushButton, 3, 2, 1, 1)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.comboBox_4 = QComboBox()
+        self.comboBox_4.setObjectName(u"comboBox_4")
+
+        self.horizontalLayout.addWidget(self.comboBox_4)
+
+        self.comboBox_3 = QComboBox()
+        self.comboBox_3.setObjectName(u"comboBox_3")
+
+        self.horizontalLayout.addWidget(self.comboBox_3)
+
+        self.comboBox_2 = QComboBox()
+        self.comboBox_2.setObjectName(u"comboBox_2")
+
+        self.horizontalLayout.addWidget(self.comboBox_2)
+
+        self.gridLayout_7.addLayout(self.horizontalLayout, 3, 0, 1, 2)
+
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+
+        self.accName_label = QLabel('Account Name')
+        self.verticalLayout_2.addWidget(self.accName_label)
+
+        self.accName_lineEdit = QLineEdit()
+        self.verticalLayout_2.addWidget(self.accName_lineEdit)
+
+        self.childAcc_label = QLabel('Child Account#')
+        self.verticalLayout_2.addWidget(self.childAcc_label)
+
+        self.child_AcclineEdit = QLineEdit('')
+        self.verticalLayout_2.addWidget(self.child_AcclineEdit)
+
+        self.zipCode = QLabel('Zip Code')
+        self.verticalLayout_2.addWidget(self.zipCode)
+
+        self.zipCode_lineEdit = QLineEdit()
+        self.verticalLayout_2.addWidget(self.zipCode_lineEdit)
+
+        self.time_label = QLabel('Time')
+        self.verticalLayout_2.addWidget(self.time_label)
+
+        self.time_lineEdit = QLineEdit()
+        self.verticalLayout_2.addWidget(self.time_lineEdit)
+
+        self.CID_label = QLabel('Circuitt ID')
+        self.verticalLayout_2.addWidget(self.CID_label)
+
+        self.CID_lineEdit = QLineEdit()
+        self.verticalLayout_2.addWidget(self.CID_lineEdit)
+
+        self.ticket_label = QLabel('Ticket #')
+        self.verticalLayout_2.addWidget(self.ticket_label)
+
+        self.ticket_lineEdit = QLineEdit()
+        self.verticalLayout_2.addWidget(self.ticket_lineEdit)
+
+
+        self.gridLayout_7.addLayout(self.verticalLayout_2, 0, 0, 3, 1)
+
+        self.notesTextEdit = QPlainTextEdit()
+        self.notesTextEdit.setObjectName(u"notesTextEdit")
+        self.notesTextEdit.setStyleSheet(u"border-color: rgb(0, 0, 0);\n""border: 1 solid black;")
+        
+
+        self.gridLayout_7.addWidget(self.notesTextEdit, 2, 1, 1, 2)
+
+        self.dateTimeEdit_2 = QDateTimeEdit(QDate.currentDate())
+     
+        self.dateTimeEdit_2.setDateTime(QDateTime.currentDateTime())
+        self.dateTimeEdit_2.setCalendarPopup(True)
+        self.dateTimeEdit_2.setDisplayFormat("MMMM/dd/yyyy")
+        self.dateTimeEdit_2.dateChanged.connect(
+            lambda date: print(date.toString("MMMM/dd/yyyy"))
+        )
+        self.pushButton.clicked.connect(lambda: self.timeZone(str(self.zipCode_lineEdit.text())))
+        self.zipCode_lineEdit.returnPressed.connect(lambda: self.timeZone(str(self.zipCode_lineEdit.text())))
+
+        self.gridLayout_7.addWidget(self.dateTimeEdit_2, 0, 1, 1, 2)
+
+        self.setLayout(self.gridLayout_7)
+
+
+
+    def timeZone(self,PostalCode):
+   
+        Canadapattern = r"^[A-Z]\d[A-Z] \d[A-Z]\d$"# 
+        # Francepattern = r"^\d{5}$"# 
+        # Japanpattern = r"^\d{3}-\d{4}$"# 
+        # UKpattern = r"^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$"
+        timestamp = int(time.time())
+        geocode_result = ''
+        cityName = ''
+        timeZone_data = ''
+   
+        gmaps = googlemaps.Client(key=os.getenv("TIMEZ_KEY"))
+        URL =  "https://maps.googleapis.com/maps/api/timezone/json?location={}%2C{}&timestamp={}&key={}"
+
+        try:
+            country = 'us'
+            PostalCode = PostalCode.strip()
+            if re.match(Canadapattern,PostalCode):
+                country = 'ca'    
+            geocode_result = gmaps.geocode(PostalCode)
+            if not geocode_result:
+                    nomi = pgeocode.Nominatim(country)
+                    cityName = nomi.query_postal_code(PostalCode)
+                    geocode_result = gmaps.geocode(cityName['place_name'])
+
+            cityName = geocode_result[0]['formatted_address']
+            lat = geocode_result[0]['geometry']['location']['lat'] 
+            lng = geocode_result[0]['geometry']['location']['lng']
+            URL = URL.format(lat,lng,timestamp,os.getenv("TIMEZ_KEY"))
+            request_Resp = requests.get(URL).content
+            timeZone_data = json.loads(request_Resp)
+            tz = QTimeZone(timeZone_data['timeZoneId'].encode('utf-8'))
+            current_time = QDateTime.currentDateTime(tz)
+            current_time = current_time.toString("MMMM/dd/yyyy h:m AP")
+
+            timeZone_Forma = (f'City Name:   {cityName}\n'
+                                f'Time Zone:   {timeZone_data['timeZoneName']} \n' 
+                                f'Time Zone ID:   {timeZone_data['timeZoneId']} \n'            
+                                f'The Current Time: {current_time}\n'
+                                )
+            self.notesTextEdit.appendPlainText(timeZone_Forma)
+            self.zipCode_lineEdit.clear()
+
+
+        except BaseException as err:
+            print(err)
+            
+
+        return timeZone_data
+  
+
+
 if __name__ == "__main__":
+
     app = QApplication(sys.argv)
     widget = MainWindow()
     widget.show()

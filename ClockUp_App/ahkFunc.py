@@ -161,7 +161,7 @@ def CCA_LogSentBreak():
             Sleep(500)
             
             for k, v in winList.OwnProps(){{
-
+                
                 if activateNeededWin(v){{
                     WinMove 2234, 291, 560, 533, v
                     Click k, 70 ;
@@ -174,6 +174,9 @@ def CCA_LogSentBreak():
                     if  A_ScreenWidth >= 1920 && MonitorGetCount() > 1{{
                         WinMove 3420,  820, 425, 210, "A"  
                     return
+                    }}
+                    else{{
+                    msgbox("CCA is not currrently active.")
                     }}
 
                 }}
@@ -317,8 +320,13 @@ def CCA_Calls(PHnum=None):
                 if  A_ScreenWidth >=1920 && MonitorGetCount()>1{{
                     WinMove 3380,  820, 460, 210, WinGetTitle() 
                 }}
+              
                 Sleep 500
                 WinActivate(WinGetTitle())
+                if(WinGetTitle()=="My Contact Center Agent"){{
+                    msgbox("You are log out of the CCA app!")
+                    return
+                }}
                 sleep 500
                 ;Click(350, 69)
                 send('^d')
@@ -327,9 +335,16 @@ def CCA_Calls(PHnum=None):
                 sleep 850
                 Send "{{Tab 4}}"
                 Send "{{enter}}" 
+            }} else{{
+                msgbox("The CCA app is not active. You need to logg into the app makee calls")
+                return
             }}
         """
     )
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -339,3 +354,6 @@ if __name__ == "__main__":
     # runCund('userN',)
     # CCA_inputBx()
     # CCA_inputBx(inputLabels=['df', 'rt'], inputTitle='None')
+    # Example usage:
+  
+
