@@ -60,9 +60,6 @@ clor = [
 ]
 
 
-
-
-
 class WorkerSignals(QObject):
 
     finished = Signal()
@@ -120,9 +117,12 @@ class MainWindow(QMainWindow):
             self.ui.Subnet_Box.addItems([blk for blk in ipBloks])
             self.ui.NipComboBox.addItems(["", "60", "100", "250", "Continuous Ping"])
             # GoogleSheetIn(shCol='P7')
-            self.ui.gspreadComboBox.addItem("NOC Status", 0)
-            self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
-            self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
+            if os.getenv('SHT_KEY'):
+                self.ui.gspreadComboBox.addItem("NOC Status", 0)
+                self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
+                self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
+            else:
+                self.ui.gspreadComboBox.setEnabled(False)
             bn = "rgb(16, 255, 136)"
 
             self.processList = []
