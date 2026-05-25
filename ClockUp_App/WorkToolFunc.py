@@ -95,8 +95,12 @@ def dotEnv_File(UserEnvSetup: dict):
 def ClockingIn():
     pageStart = ""
 
+    bxInput = {
+        "ADP_Time": "Enter your Granite ADP Link",}
+    custmInputBox_Func(bxInput, "ADP Link Sign In")
+
     driverIn = seleniumDiverInit()
-    driverIn.get(ADP_Time)
+    driverIn.get(f"{os.getenv('ADP_Time')}")
 
     WebDriverWait(driverIn, 30).until(
         EC.presence_of_element_located((By.ID, "login-form_username"))
@@ -163,7 +167,7 @@ def ClockingIn():
 
             ahkExe_Path().run_script(
                 """
-                Sleep 10000
+                Sleep 5000
                 DllCall("user32.dll\LockWorkStation")
                 """
             )

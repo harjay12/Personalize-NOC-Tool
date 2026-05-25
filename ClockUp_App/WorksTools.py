@@ -256,7 +256,6 @@ class MainWindow(QMainWindow):
                 x=win.get_position().x, y=win.get_position().y, width=1682, height=977
             )
             time.sleep(3)
-            print('after: ', f'{os.getenv("CON_PASSW")},{self.inputCode}')
             ahkFunc.runCund(
                 userN=os.getenv("COND_USERNAME"), condPassW=f'{os.getenv("CON_PASSW")},{self.inputCode}'
             )
@@ -1040,7 +1039,9 @@ class FlexEdgeookUp(QWidget):
                 flags=re.IGNORECASE)
     
         if self.stattsVal and self.nsoidFormat:
+            self.stattsVal = self.stattsVal.group(0)
             urlLink= f"https://{self.stattsVal}/routers/{self.nsoidFormat}"
+            print(urlLink)
             text, ok = QInputDialog.getText(None, "OKTA CODE", "Enter your Okta code:")
             if text and ok:
                 
