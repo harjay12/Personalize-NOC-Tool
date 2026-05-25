@@ -976,19 +976,22 @@ class CliWidget(QWidget):
 
 
  # ------------------------------- FlexEdge look up ---------------------------
-
+'''
+For this particular class we are working specific item can't go into details.
+'''
 class FlexEdgeookUp(QWidget):
     def __init__(self,parent=None, args=None):
         super().__init__(parent)
         self.args = args
         self.threadpool,self.stackedWidget = args
-
+        #initiat some object from Pyside6 lib for grafical view. layouts, buttons etc...
         self.layout = QVBoxLayout()
         self.text_outputF = QTextEdit()
         self.command_input = QLineEdit()
         self.condPushBtn = QPushButton('Conductor')
         self.GlinlPushBtn = QPushButton('Close GLink')
         self.horizontalLayout_4 = QHBoxLayout()
+        # Simple variable to display a message 
         self.startScreen = '+----------------------+\n| FlexEdge Lookup Tool |' \
         '\n+----------------------+\nNSOID Format: CPEGRT00000xxxxx\n\nEnter NSOID to find: '
 
@@ -1013,6 +1016,7 @@ class FlexEdgeookUp(QWidget):
   
         self.setLayout(self.layout)
 
+        # text display format.
         self.text_outputF.setStyleSheet(
             "background-color: rgb(0, 0, 0);\n"
             "color: rgb(255, 255, 255);\n"
@@ -1028,7 +1032,7 @@ class FlexEdgeookUp(QWidget):
         self.condPushBtn.clicked.connect(self.condSearch)
         self.GlinlPushBtn.clicked.connect(lambda: WorkToolFunc.closeSel())
         
-
+    # Help with a quick search vu opening the browser and add creds.
     def condSearch(self):
         self.stattsVal = re.search(
                 r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*",
@@ -1053,7 +1057,7 @@ class FlexEdgeookUp(QWidget):
     def edNSOI_executeTrhead(self):
       
         if self.edComboBox.currentIndex() == 0:
-            # self.text_outputF.clear()
+       
             self.text_outputF.append(f'{self.startScreen}')
             self.text_outputF.append(f'{self.nsoidFormat}\n')
 
@@ -1064,7 +1068,7 @@ class FlexEdgeookUp(QWidget):
      
                 
         elif self.edComboBox.currentIndex() == 1:
-            # self.text_outputF.clear()
+           
             self.text_outputF.append(f'{self.startScreen1}')
             self.text_outputF.append(f'{self.nsoidFormat}\n')
 

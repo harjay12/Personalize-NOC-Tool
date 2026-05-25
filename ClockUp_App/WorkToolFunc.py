@@ -37,6 +37,7 @@ dotenv_path = find_dotenv(rf'c:\Users\{os.environ["username"]}\Documents\.env')
 load_dotenv(dotenv_path)
 seleCloser = []
 
+# Dict for Selemiun usage collecting tags.
 promptPath ={
         'pOkta' : "/html/body/div[2]/div/div/div/div[1]/button[1]",
         'pEmail' : "/html/body/div[2]/div/div/div/form/div[2]/div/div[1]/div/div/input",
@@ -171,6 +172,10 @@ def ClockingIn():
 
 
 def custmInputBox_Func(bxInput=None, inputTitle=None):
+    '''
+    With this function we have created a custom user input with AutoHotkey, that would accecpt and dictionary and a string.
+    The this dict to display what the user need to input the key get assigned the input val for the .env file.    
+    '''
     listInputs = ""
     keyInputs = ""
 
@@ -293,6 +298,8 @@ def kill_process(old_pid):
 
 
 def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
+    bxInput = {"SHT_KEY": "Enter The NOC Sheet Key", }
+    custmInputBox_Func(bxInput, "Add the NOC Google sheet key.")
 
     global gs_NOC
     inOut_office = "Office"
@@ -314,7 +321,7 @@ def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
 
     gc = gspread.oauth(credentials_filename=file_path)
  
-    wb = gc.open_by_key("1fWXYlfnNS71ZPsNqXZ5ZVjSCjASnvgcHKC5idWD3cOA")
+    wb = gc.open_by_key(f"{os.getenv('SHT_KEY')}")
 
     worksheet = wb.worksheet("Rep Punch Tab")
     if shCol:
@@ -431,9 +438,11 @@ def portListner(port):
 
 def edInit_(driver):
 
+    # Mian try process to catch errors.
     try: 
  
-        try:  # Incase tag does not exist.
+        # All the try process bellow are checking if we are at a certain part or tag of the page to determine how to proceed.
+        try: 
             logPrompt.update(
                 {"okta": driver.find_element(By.XPATH, f"{promptPath['pOkta']}")
                 })
@@ -497,9 +506,10 @@ def edConfig_Srch(nsoidInput=None):
     time.sleep(3)
     edInit_(driver)
     time.sleep(2)
-
+    # Mian try process to catch errors.
     try:
-        try:
+        # All the try process bellow are checking if we are at a certain part of the page to determine how to proceed.
+        try: 
             driver.find_element(By.XPATH, f'{promptPath['pnsoInputs']}')
             driver.find_element(By.XPATH,'/html/body/div[2]/header/div/div/a').click()
         except NoSuchElementException:
@@ -544,8 +554,9 @@ def NSOLook(nsoidInput=None):
     time.sleep(3)
     edInit_(driver)
     time.sleep(2)
-
+    # Mian try process to catch errors.
     try:
+        # All the try process bellow are checking if we are at a certain part of the page to determine how to proceed.
         try:
             driver.find_element(By.XPATH, f'{promptPath['psrchInputs']}')
             driver.find_element(By.XPATH,'/html/body/div[2]/header/div/div/a').click()
@@ -604,7 +615,7 @@ def closeSel():
 
 
 def Stop_portListener():
-    try:
+    try: #if port does not exist it will create one.
         cmd = f'netstat -ano | findstr ":{9561}"' # Windows version
         output = subprocess.check_output(cmd, shell=True).decode()
         if (f"LISTENING" in output or f"ESTABLISHED" in output):
@@ -618,6 +629,7 @@ def Stop_portListener():
 
 
 def nsoTableFormat(dict_listVal=None):
+    # Formatting the result into somewhat of a table display.
     res = ''
     for key, val in dict_listVal.items():
         res =   res +"\n" +  f"\n{key:<10}\n"
@@ -628,18 +640,22 @@ def nsoTableFormat(dict_listVal=None):
     
     
 def stdrdNSO_srchFormatter(nsoStr=None):
+    
     tempArr = []
     formatToDicy ={}
 
     if 'ERROR: ' in nsoStr:
         return nsoStr
     
+    '''
+    - Manupilate the result by first locate the word Details to form the hearder of the table. 
+    - We then isolate the remainder of the results are added into a sub-array with only 2 ithems.
+    '''
     nsoStr  =  nsoStr.strip().split('\n')
     for header in nsoStr:
         if 'Details' in header:
             tempArr.append(header)
         
-
     for cnt in range(0, len(tempArr)-1):
  
         if tempArr[cnt] in nsoStr:
