@@ -99,98 +99,96 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.resize(621, 468)
 
-
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         # Ensure the window is customizable to allow flag changes
         self.setWindowFlag(Qt.CustomizeWindowHint, True)
-        try:
-            self.ui.comboBox.addItems([x for x in secretCompdetails.conductors])
-            # print(self.ui.CCABBRcomboBox.setin(0))
-            self.ui.CCABBRcomboBox.addItem("Select a carrier to call", 0)
+     
+        self.ui.comboBox.addItems([x for x in secretCompdetails.conductors])
+        # print(self.ui.CCABBRcomboBox.setin(0))
+        self.ui.CCABBRcomboBox.addItem("Select a carrier to call", 0)
 
-            self.ui.CCABBRcomboBox.addItems(
-                sorted([x.upper() for x in secretCompdetails.CarrierPH])
-            )
+        self.ui.CCABBRcomboBox.addItems(
+            sorted([x.upper() for x in secretCompdetails.CarrierPH])
+        )
 
-            self.ui.Subnet_Box.addItems([blk for blk in ipBloks])
-            self.ui.NipComboBox.addItems(["", "60", "100", "250", "Continuous Ping"])
-            # GoogleSheetIn(shCol='P7')
-            if os.getenv('SHT_KEY'):
-                self.ui.gspreadComboBox.addItem("NOC Status", 0)
-                self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
-                self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
-            else:
-                self.ui.gspreadComboBox.setEnabled(False)
-            bn = "rgb(16, 255, 136)"
+        self.ui.Subnet_Box.addItems([blk for blk in ipBloks])
+        self.ui.NipComboBox.addItems(["", "60", "100", "250", "Continuous Ping"])
+        # GoogleSheetIn(shCol='P7')
+        if os.getenv('SHT_KEY'):
+            self.ui.gspreadComboBox.addItem("NOC Status", 0)
+            self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
+            self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
+        else:
+            self.ui.gspreadComboBox.addItem("Add Sheet ID", 1)
 
-            self.processList = []
+        bn = "rgb(16, 255, 136)"
 
-            self.cliWidgesList = []
-            self.statusLink = ""
-            self.inputCode = ''
+        self.processList = []
 
-            self.msg_box = QMessageBox(
-                QMessageBox.Information,
-                # This title will not be displayed
-                "Title (will be hidden)",
-                "",
-                QMessageBox.Ok,
-                None,
-                Qt.WindowType.FramelessWindowHint,
-            )
-            self.DropDwnStyle()
-            self.flexBtnisOn = False
+        self.cliWidgesList = []
+        self.statusLink = ""
+        self.inputCode = ''
 
-            # ----------------Sign in/ out/ Lunch---------------
-            self.ui.ClockInpushButton.clicked.connect(self.SignIn_Send)
-            # ------------------CCA Sign i------------------------------------
-            self.ui.CCA_pushButton.clicked.connect(self.CCA_Send)
-            # ---------------------NOC Google Sheet status change IN------------------
-            self.ui.CreateIW_pushBtn.clicked.connect(self.Creat_IW)
-            self.ui.FedgeLookUp.clicked.connect(self.flexFun)
+        self.msg_box = QMessageBox(
+            QMessageBox.Information,
+            # This title will not be displayed
+            "Title (will be hidden)",
+            "",
+            QMessageBox.Ok,
+            None,
+            Qt.WindowType.FramelessWindowHint,
+        )
+        self.DropDwnStyle()
+        self.flexBtnisOn = False
 
-            # ----------------------------Condustors--------------------------
-            self.ui.comboBox.currentTextChanged.connect(self.conductors)
-            self.ui.CCABBRcomboBox.currentTextChanged.connect(self.CarrierCalls)
-            # -----------------------------CLI for ping initiate-----------------------
-            self.ui.PingButton.clicked.connect(self.multi_Pages)
-            # -------------------------------- Page navigation
-            self.ui.Prev_pushBtn.clicked.connect(self.go_to_previous_page)
-            self.ui.Next_pushBtn.clicked.connect(self.go_to_next_page)
-            self.ui.Home_pushBtn.clicked.connect(
-                lambda: self.ui.stackedWidget.setCurrentIndex(0)
-            )
-            self.ui.stackedWidget.currentChanged.connect(self.changesPages)
-            self.ui.Close_pushBtn.clicked.connect(self.clear_stacked_widget)
+        # ----------------Sign in/ out/ Lunch---------------
+        self.ui.ClockInpushButton.clicked.connect(self.SignIn_Send)
+        # ------------------CCA Sign i------------------------------------
+        self.ui.CCA_pushButton.clicked.connect(self.CCA_Send)
+        # ---------------------NOC Google Sheet status change IN------------------
+        self.ui.CreateIW_pushBtn.clicked.connect(self.Creat_IW)
+        self.ui.FedgeLookUp.clicked.connect(self.flexFun)
 
-            self.ui.endPing_pushBtn.clicked.connect(self.terminateSinglePing)
-            self.ui.endAllPing_pushBtn.clicked.connect(
-                lambda: [p.kill() for p in self.processList]
-            )
+        # ----------------------------Condustors--------------------------
+        self.ui.comboBox.currentTextChanged.connect(self.conductors)
+        self.ui.CCABBRcomboBox.currentTextChanged.connect(self.CarrierCalls)
+        # -----------------------------CLI for ping initiate-----------------------
+        self.ui.PingButton.clicked.connect(self.multi_Pages)
+        # -------------------------------- Page navigation
+        self.ui.Prev_pushBtn.clicked.connect(self.go_to_previous_page)
+        self.ui.Next_pushBtn.clicked.connect(self.go_to_next_page)
+        self.ui.Home_pushBtn.clicked.connect(
+            lambda: self.ui.stackedWidget.setCurrentIndex(0)
+        )
+        self.ui.stackedWidget.currentChanged.connect(self.changesPages)
+        self.ui.Close_pushBtn.clicked.connect(self.clear_stacked_widget)
 
-            self.ui.NSOID.setPlaceholderText("Enter the NSOID...")
+        self.ui.endPing_pushBtn.clicked.connect(self.terminateSinglePing)
+        self.ui.endAllPing_pushBtn.clicked.connect(
+            lambda: [p.kill() for p in self.processList]
+        )
 
-            # Connect the textChanged signal to a slot
-            self.ui.NSOID.returnPressed.connect(self.on_nsoidStr)
+        self.ui.NSOID.setPlaceholderText("Enter the NSOID...")
 
-            self.timer = QTimer(self)
-            self.timer.timeout.connect(self.show_time)
-            self.timer.start()
+        # Connect the textChanged signal to a slot
+        self.ui.NSOID.returnPressed.connect(self.on_nsoidStr)
 
-            self.ui.Prev_pushBtn.setVisible(False)
-            self.ui.Home_pushBtn.setVisible(False)
-            self.ui.Next_pushBtn.setVisible(False)
-            self.ui.Close_pushBtn.setVisible(False)
-            self.ui.endPing_pushBtn.setVisible(False)
-            self.ui.endAllPing_pushBtn.setVisible(False)
-            self.ui.NSOID.setVisible(False)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.show_time)
+        self.timer.start()
 
-            self.threadpool = QThreadPool().globalInstance()
+        self.ui.Prev_pushBtn.setVisible(False)
+        self.ui.Home_pushBtn.setVisible(False)
+        self.ui.Next_pushBtn.setVisible(False)
+        self.ui.Close_pushBtn.setVisible(False)
+        self.ui.endPing_pushBtn.setVisible(False)
+        self.ui.endAllPing_pushBtn.setVisible(False)
+        self.ui.NSOID.setVisible(False)
 
-        except KeyboardInterrupt:
-            pass
+        self.threadpool = QThreadPool().globalInstance()
+
 
     # ---------------------------------------Current time function---------------------------------------------
 
