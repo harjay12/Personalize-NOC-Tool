@@ -116,14 +116,14 @@ class MainWindow(QMainWindow):
         self.ui.Subnet_Box.addItems([blk for blk in ipBloks])
         self.ui.NipComboBox.addItems(["", "60", "100", "250", "Continuous Ping"])
         # GoogleSheetIn(shCol='P7')
+        self.ui.gspreadComboBox.addItem("NOC Status", 0)
+
         if os.getenv('SHT_KEY'):
-            self.ui.gspreadComboBox.addItem("NOC Status", 0)
             self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
             self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
         else:
-            self.ui.gspreadComboBox.addItem("Add Sheet ID", 1)
-
-        bn = "rgb(16, 255, 136)"
+            self.ui.gspreadComboBox.addItems(["Add Sheet ID"])
+            self.ui.gspreadComboBox.currentTextChanged.connect(self.gsht_Status)
 
         self.processList = []
 
@@ -199,6 +199,21 @@ class MainWindow(QMainWindow):
             self.ui.dateTimeEdit.setDateTime(QDateTime.currentDateTime())
         except KeyboardInterrupt:
             pass
+
+
+    def gsht_Status(self):
+        bxInput = {"SHT_KEY": "Enter The NOC Sheet Key", }
+
+        if self.ui.gspreadComboBox.currentText() == "Add Sheet ID":
+            shtSetin = WorkToolFunc.custmInputBox_Func(bxInput, "Add the NOC Google sheet key.")
+            if shtSetin:
+                self.ui.gspreadComboBox.clear()
+                self.ui.gspreadComboBox.addItem("NOC Status", 0)
+                self.ui.gspreadComboBox.addItems(WorkToolFunc.GoogleSheetIn(shCol="P7"))
+                self.ui.gspreadComboBox.currentTextChanged.connect(self.NOC_StatusBtns)
+                return
+            self.ui.gspreadComboBox.setCurrentIndex(0)
+
 
     # --------------------------------------- ahk Pid functions ---------------------------------------------
 

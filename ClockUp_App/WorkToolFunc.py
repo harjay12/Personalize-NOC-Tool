@@ -76,9 +76,6 @@ PassWord = ""
 LogFail = ""
 gs_NOC = ""
 
-ADP_Time = "https://online.adp.com/signin/v1/?APPID=EeT&productId=80e309c3-7096-bae1-e053-3505430b5495&returnURL=https://eetd2.adp.com&callingAppId=EeT&TARGET=-SM-https://eetd2.adp.com/122af1p/applications/navigator/htmlnavigator"
-
-
 def seleniumDiverInit():
     return webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
 
@@ -180,55 +177,59 @@ def custmInputBox_Func(bxInput=None, inputTitle=None):
     With this function we have created a custom user input with AutoHotkey, that would accecpt and dictionary and a string.
     The this dict to display what the user need to input the key get assigned the input val for the .env file.    
     '''
-    listInputs = ""
-    keyInputs = ""
+    try:
+        listInputs = ""
+        keyInputs = ""
 
-    for key, value in bxInput.items():
-        if os.getenv(key) is None or os.getenv(key) == "":
-            listInputs += f"{value},"
-            keyInputs += f"{key},"
+        for key, value in bxInput.items():
+            if os.getenv(key) is None or os.getenv(key) == "":
+                listInputs += f"{value},"
+                keyInputs += f"{key},"
 
-    listInputs = listInputs[:-1]
-    keyInputs = keyInputs[:-1]
+        listInputs = listInputs[:-1]
+        keyInputs = keyInputs[:-1]
 
-    listInputs = listInputs.split(",")
-    keyInputs = keyInputs.split(",")
+        listInputs = listInputs.split(",")
+        keyInputs = keyInputs.split(",")
 
-    if not os.path.exists(rf'c:\Users\{os.environ["username"]}\Documents\.env'):
-        filvar = "{"
-        # os.environ["CCA_USERNAME"] = cca_val.split(',')[0]
-        cca_val = ahkFunc.CCA_inputBx(listInputs, inputTitle=inputTitle)
-
-        if len(cca_val) == 0:
-            return
-
-        for cnt, value in enumerate(bxInput):
-            filvar += f'"{value}":"{cca_val.split(',')[cnt]}",'
-
-        filvar = filvar[:-1]
-        filvar += "}"
-
-        filvar = json.loads(filvar)
-        dotEnv_File(filvar)
-    else:
-
-        if listInputs[0] != "":
-
+        if not os.path.exists(rf'c:\Users\{os.environ["username"]}\Documents\.env'):
+            filvar = "{"
+            # os.environ["CCA_USERNAME"] = cca_val.split(',')[0]
             cca_val = ahkFunc.CCA_inputBx(listInputs, inputTitle=inputTitle)
+
             if len(cca_val) == 0:
                 return
 
-            for idx in range(0, len(listInputs)):
-                with open(dotenv_path, "a") as f:
-                    if os.getenv(key) is None:
-                        f.write(f"\n{keyInputs[idx]}='{cca_val.split(',')[idx]}'")
-                    else:
-                        set_key(
-                            dotenv_path,
-                            f"{keyInputs[idx]}",
-                            f"{cca_val.split(',')[idx]}",
-                        )
-    load_dotenv(dotenv_path, override=True)
+            for cnt, value in enumerate(bxInput):
+                filvar += f'"{value}":"{cca_val.split(',')[cnt]}",'
+
+            filvar = filvar[:-1]
+            filvar += "}"
+
+            filvar = json.loads(filvar)
+            dotEnv_File(filvar)
+        else:
+
+            if listInputs[0] != "":
+
+                cca_val = ahkFunc.CCA_inputBx(listInputs, inputTitle=inputTitle)
+                if len(cca_val) == 0:
+                    return
+
+                for idx in range(0, len(listInputs)):
+                    with open(dotenv_path, "a") as f:
+                        if os.getenv(key) is None:
+                            f.write(f"\n{keyInputs[idx]}='{cca_val.split(',')[idx]}'")
+                        else:
+                            set_key(
+                                dotenv_path,
+                                f"{keyInputs[idx]}",
+                                f"{cca_val.split(',')[idx]}",
+                            )
+        load_dotenv(dotenv_path, override=True)
+        return True
+    except BaseException:
+        return False
     
 
 def CCA_LoggOns(logStatus=None):
@@ -302,8 +303,8 @@ def kill_process(old_pid):
 
 
 def GoogleSheetIn(inClock=None, shStatus=None, shCol=None):
-    bxInput = {"SHT_KEY": "Enter The NOC Sheet Key", }
-    custmInputBox_Func(bxInput, "Add the NOC Google sheet key.")
+    # bxInput = {"SHT_KEY": "Enter The NOC Sheet Key", }
+    # custmInputBox_Func(bxInput, "Add the NOC Google sheet key.")
 
     global gs_NOC
     inOut_office = "Office"
@@ -677,6 +678,7 @@ def stdrdNSO_srchFormatter(nsoStr=None):
 
 
 if __name__ == "__main__":
+    GoogleSheetIn()
  
     print(datetime.date.today().strftime("%A").lower())
     GoogleSheetIn()
