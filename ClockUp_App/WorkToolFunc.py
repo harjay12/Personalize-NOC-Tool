@@ -38,6 +38,8 @@ load_dotenv(dotenv_path)
 seleCloser = []
 
 # Dict for Selemiun usage collecting tags.
+# /html/body/div[2]/div/div/main/div/div[1]/main/div/div[4]/button
+# /html/body/div[2]/div/div/main/div/div[1]/main/div/div[4]/div/div/div/div[4]
 promptPath ={
         'pOkta' : "/html/body/div[2]/div/div/div/div[1]/button[1]",
         'pEmail' : "/html/body/div[2]/div/div/div/form/div[2]/div/div[1]/div/div/input",
@@ -46,16 +48,26 @@ promptPath ={
         'psrchInputs': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div/div/input",
         'inputNSO': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div/div/input",
         'nsoSrchBtn': "/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[2]/button[2]",
-        'nocField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[4]",
-        'configFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[4]/div/a",
-        'stdField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[1]",
-        'lookUpFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[2]",
+        # 'nocField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[4]",
+        'nocField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div[4]/button",
+
+
+        # 'configFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[4]/div/a",
+        'configFeild': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div[4]/div/div/div/div[4]/a/div",
+
+        # 'stdField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div/a[1]",
+        'stdField': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div[1]/button",
+
+        # 'lookUpFeild': "/html/body/div[2]/div/div/main/div/div[1]/div[1]/div/div[2]",
+        'lookUpFeild': "/html/body/div[2]/div/div/main/div/div[1]/main/div/div[1]/div/div/div/div[2]/a/div",
+
         'pnsoInputs':"/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/form/div/div/div[1]/div/div/div/input",
         'stdSrchBtn': "/html/body/div[2]/div/div/main/div/div[1]/div/div/div[4]/form/div/div/div[2]/button[2]",
         'nfound':"/html/body/div[2]/div/div/main/div/div[1]/div/div/form/div/div/div[1]/div/div[1]",
     }
 logPrompt = {}
 pathVa = [0]*10
+
 
 # Check for AutoHotkey64
 def ahkExe_Path():
@@ -95,10 +107,10 @@ def ClockingIn():
     bxInput = {
         "ADP_Time": "Enter your Granite ADP Link",}
     custmInputBox_Func(bxInput, "ADP Link Sign In")
-
+    # ahkExe_Path().msg_box(os.getenv("ADP_Time"), title="ADP Link", timeout=50)
     driverIn = seleniumDiverInit()
     driverIn.get(f"{os.getenv('ADP_Time')}")
-
+    
     WebDriverWait(driverIn, 30).until(
         EC.presence_of_element_located((By.ID, "login-form_username"))
     )
@@ -523,11 +535,16 @@ def edConfig_Srch(nsoidInput=None):
         try:
             driver.find_element(By.XPATH, f'{promptPath['psrchInputs']}')
         except NoSuchElementException:
-            WebDriverWait(driver, 30).until(
-                        EC.presence_of_element_located((By.XPATH,f"{promptPath['nocField']}"))).click()
-            
-            WebDriverWait(driver, 30).until(
-                        EC.presence_of_element_located((By.XPATH,f"{promptPath['configFeild']}"))).click()
+            try:
+                driver.find_element(By.XPATH, f'{promptPath["configFeild"]}').click()
+            except NoSuchElementException:
+                
+                WebDriverWait(driver, 30).until(
+                            EC.presence_of_element_located((By.XPATH,f"{promptPath['nocField']}"))).click()
+                time.sleep(1)
+                
+                WebDriverWait(driver, 30).until(
+                            EC.presence_of_element_located((By.XPATH,f"{promptPath['configFeild']}"))).click()
 
         WebDriverWait(driver, 30).until(
                     EC.presence_of_element_located((By.XPATH,  f"{promptPath['inputNSO']}"))).clear()
@@ -571,11 +588,14 @@ def NSOLook(nsoidInput=None):
         try:
             driver.find_element(By.XPATH, f'{promptPath['pnsoInputs']}')
         except NoSuchElementException:
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.XPATH,f"{promptPath['stdField']}"))).click()
-                
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.XPATH,f"{promptPath['lookUpFeild']}"))).click()
+            try:
+                driver.find_element(By.XPATH, f'{promptPath["lookUpFeild"]}').click()
+            except NoSuchElementException:
+                WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.XPATH,f"{promptPath['stdField']}"))).click()
+                    
+                WebDriverWait(driver, 30).until(
+                    EC.presence_of_element_located((By.XPATH,f"{promptPath['lookUpFeild']}"))).click()
             
         WebDriverWait(driver, 30).until(
                         EC.presence_of_element_located((By.XPATH,  f"{promptPath['pnsoInputs']}"))).clear()
@@ -678,11 +698,12 @@ def stdrdNSO_srchFormatter(nsoStr=None):
 
 
 if __name__ == "__main__":
-    GoogleSheetIn()
+    NSOLook('CPEGRT0000007530')
+    # GoogleSheetIn()
  
-    print(datetime.date.today().strftime("%A").lower())
-    GoogleSheetIn()
-    if is_remotely_used_windows():
-        print("The Windows computer might be used remotely.")
-    else:
-        print("The Windows computer appears to be used locally.")
+    # print(datetime.date.today().strftime("%A").lower())
+    # GoogleSheetIn()
+    # if is_remotely_used_windows():
+    #     print("The Windows computer might be used remotely.")
+    # else:
+    #     print("The Windows computer appears to be used locally.")

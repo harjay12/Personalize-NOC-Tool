@@ -16,6 +16,7 @@ import ahkFunc
 import requests
 import pgeocode
 import subprocess
+import speechToText
 import traceback
 import googlemaps
 import WorkToolFunc
@@ -33,6 +34,9 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 dotenv_path = find_dotenv(rf'c:\Users\{os.environ["username"]}\Documents\.env')
 load_dotenv(dotenv_path)
 
+ipv4_REGEX = r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*"
+url_REGEX = r"^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$"
+regexIPV6_V4 = r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*|(\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,7}:\b|\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}\b|\b(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}\b|\b(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}\b|\b[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}\b|\b:(?::[0-9a-fA-F]{1,4}){1,7}\b|::).*|(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*"
 
 ipBloks = {
     "": "",
@@ -58,7 +62,6 @@ clor = [
     "rgb(255, 53, 35)",
     "rgb(154,80,0)",
 ]
-
 
 class WorkerSignals(QObject):
 
@@ -104,6 +107,8 @@ class MainWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
         # Ensure the window is customizable to allow flag changes
         self.setWindowFlag(Qt.CustomizeWindowHint, True)
+        self.second_window = None
+        self.ui.speechToTextBnt.clicked.connect(self.open_new_window)
      
         self.ui.comboBox.addItems([x for x in secretCompdetails.conductors])
         # print(self.ui.CCABBRcomboBox.setin(0))
@@ -189,6 +194,13 @@ class MainWindow(QMainWindow):
 
         self.threadpool = QThreadPool().globalInstance()
 
+
+    def open_new_window(self):
+        # Check if the window is already open to prevent duplicate windows
+        if self.second_window is None:
+            self.second_window = speechToText.TextDisplayWindow()
+        
+        self.second_window.show()
 
     # ---------------------------------------Current time function---------------------------------------------
 
@@ -418,21 +430,8 @@ class MainWindow(QMainWindow):
 
             GWIP = self.ui.GWIPlineEdit.text().replace(" ", "")
 
-            is_ValidIP = re.search(
-                r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*|(?:https?://)?(?:www\.)?[\w-]+(?:\.[\w-]+)+[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-]", GWIP)
-
-            if not is_ValidIP:
-                self.msg_box.setText(
-                    "The Gateway IP Address is not valid.\t"
-                    "\nVerified you have entered a valid gateway IP address."
-                )
-                self.msg_box.exec()
-                self.cliWidgesList.clear()
-                usableIP.clear()
-                self.ui.Next_pushBtn.setVisible(False)
-                self.ui.Close_pushBtn.setVisible(False)
-
-                return
+            is_ValidIP = bool(re.search(ipv4_REGEX, GWIP))
+            is_ValidURL = bool(re.search(url_REGEX, GWIP))
 
             """ 
             ipLaststr = GWIP.split(".")[-1]
@@ -467,14 +466,25 @@ class MainWindow(QMainWindow):
                 self.cliWidgesList.append(self.cliWidges)
                 self.ui.stackedWidget.addWidget(self.cliWidges)
                 self.processList.append(self.process)
-                if '.com' in is_ValidIP.group(0):
+                if is_ValidURL:
                     usableIP.append(GWIP) 
                     break
-                else:
+                elif is_ValidIP:
                     neighborsIp = f"{GWIP[:ipLstDt+1]}{str(int(ipLstOctet) + i)}"
                     usableIP.append(neighborsIp)
-         
 
+                else:
+                    self.msg_box.setText(
+                    "The Gateway IP Address or the URL is not valid.\t"
+                    "\nVerified you have entered a valid gateway IP address or a valid URL.")
+                    self.msg_box.exec()
+                    self.cliWidgesList.clear()
+                    usableIP.clear()
+                    self.ui.Next_pushBtn.setVisible(False)
+                    self.ui.Close_pushBtn.setVisible(False)
+
+                    return
+                    
             self.ui.stackedWidget.setCurrentIndex(1)  # Display the first page
             if self.ui.Subnet_Box.currentText() == "Trace Route":
                 self.cliWidgesList[0].start_cli_program(
@@ -871,6 +881,7 @@ class CliWidget(QWidget):
         super().__init__(parent)
 
         self.text_output = QTextEdit()
+        self.text_output.setReadOnly(True)
         self.process = args
         self.layout = QVBoxLayout()
         self.ping_times = []
@@ -921,17 +932,22 @@ class CliWidget(QWidget):
         print(f"Process finished with exit code {exitCode} and status {exitStatus}")
 
         pingMatch = re.search(
-            r"(?=.*data)(?=.*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})).*",
+            regexIPV6_V4,
             self.text_output.toPlainText(),
             flags=re.IGNORECASE,
         )
-
+  
         if self.ping_times or self.timesOut:
             stattsVal = re.search(
-                r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*",
+                regexIPV6_V4,
                 pingMatch[0],
                 flags=re.IGNORECASE,
-            ).group(1)
+            )
+# (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*
+
+            if stattsVal:
+                stattsVal = stattsVal.group(1) or stattsVal.group(2)
+
             if len(self.timesOut) >= 1:
                 drpStr = ""
 
@@ -986,7 +1002,6 @@ class CliWidget(QWidget):
             print("error found!")
 
 
-
  # ------------------------------- FlexEdge look up ---------------------------
 '''
 For this particular class we are working specific item can't go into details.
@@ -999,6 +1014,7 @@ class FlexEdgeookUp(QWidget):
         #initiat some object from Pyside6 lib for grafical view. layouts, buttons etc...
         self.layout = QVBoxLayout()
         self.text_outputF = QTextEdit()
+        self.text_outputF.setReadOnly(True)
         self.command_input = QLineEdit()
         self.condPushBtn = QPushButton('Conductor')
         self.GlinlPushBtn = QPushButton('Close GLink')
@@ -1047,7 +1063,7 @@ class FlexEdgeookUp(QWidget):
     # Help with a quick search vu opening the browser and add creds.
     def condSearch(self):
         self.stattsVal = re.search(
-                r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*",
+                ipv4_REGEX,
                 self.text_outputF.toPlainText(),
                 flags=re.IGNORECASE)
     
